@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>API Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #eee; }
+    button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+    pre { background: #2a2a2a; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .success { color: #4f4; }
+    .error { color: #f44; }
+  </style>
+</head>
+<body>
+  <h1>Rota API Test</h1>
+  <p>Testing: <strong>https://rotatool.dbzocchi.app/api.php</strong></p>
+
+  <button onclick="testSave()">Test Save (POST)</button>
+  <button onclick="testLoad()">Test Load (GET)</button>
+  <button onclick="testCORS()">Test CORS</button>
+
+  <h2>Results:</h2>
+  <pre id="output">Click a button to test...</pre>
+
+  <script>
+    const API_URL = 'https://rotatool.dbzocchi.app/api.php';
+    const output = document.getElementById('output');
+
+    function log(msg, isError = false) {
+      const timestamp = new Date().toLocaleTimeString();
+      const className = isError ? 'error' : 'success';
+      output.innerHTML += `<span class="${className}">[${timestamp}] ${msg}</span>\n`;
+    }
+
+    async function testSave() {
+      output.innerHTML = 'Testing POST (save)...\n';
+      try {
+        const testData = {
+          people: [{ id: 'test1', name: 'Test Person' }],
+          assignments: [],
+          closingTimes: [19, 19, 19, 19, 20, 20, 19],
+          weeklyRotas: {}
+        };
+
+        log('Sending POST request...');
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(testData)
+        });
+
+        log(`Response status: ${response.status}`);
+        const data = await response.json();
+        log(`Response data: ${JSON.stringify(data, null, 2)}`);
+
+        if (response.ok) {
+          log('✓ Save successful!', false);
+        } else {
+          log('✗ Save failed!', true);
+        }
+      } catch (error) {
+        log(`✗ Error: ${error.message}`, true);
+        log(`Full error: ${error.stack}`, true);
+      }
+    }
+
+    async function testLoad() {
+      output.innerHTML = 'Testing GET (load)...\n';
+      try {
+        log('Sending GET request...');
+        const response = await fetch(API_URL);
+
+        log(`Response status: ${response.status}`);
+        const data = await response.json();
+        log(`Response data: ${JSON.stringify(data, null, 2)}`);
+
+        if (response.ok) {
+          log('✓ Load successful!', false);
+        } else {
+          log('✗ Load failed!', true);
+        }
+      } catch (error) {
+        log(`✗ Error: ${error.message}`, true);
+        log(`Full error: ${error.stack}`, true);
+      }
+    }
+
+    async function testCORS() {
+      output.innerHTML = 'Testing CORS...\n';
+      try {
+        log('Sending OPTIONS request...');
+        const response = await fetch(API_URL, { method: 'OPTIONS' });
+
+        log(`Response status: ${response.status}`);
+        log('CORS Headers:');
+        log(`  Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}`);
+        log(`  Access-Control-Allow-Methods: ${response.headers.get('Access-Control-Allow-Methods')}`);
+        log(`  Access-Control-Allow-Headers: ${response.headers.get('Access-Control-Allow-Headers')}`);
+
+        if (response.ok) {
+          log('✓ CORS configured!', false);
+        } else {
+          log('✗ CORS check failed!', true);
+        }
+      } catch (error) {
+        log(`✗ Error: ${error.message}`, true);
+      }
+    }
+  </script>
+</body>
+</html>

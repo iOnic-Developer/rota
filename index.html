@@ -1363,11 +1363,9 @@ const ROLES = ['Fryer','Takeaway','Restaurant','Extra','Kitchen','New Side'];
 const CELL_MAX = 6;
 const STORAGE_KEY = 'rota-v1';
 
-// GitHub storage configuration
-const GITHUB_OWNER = 'iOnic-Developer'; // Your GitHub username
-const GITHUB_REPO = 'rota'; // Your repo name
-const GITHUB_TOKEN = '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'; // Put your GitHub token here (Settings → Developer → Personal Access Tokens → Classic)
-const USE_GITHUB_STORAGE = false; // Set to true to enable cloud storage
+// Server storage configuration
+const SERVER_URL = 'https://rotatool.dbzocchi.app/api.php';
+const USE_SERVER = true; // Set to true to enable server storage
 
 const DEFAULT_PEOPLE = [
   'Alix Murton', 'Brooke Messrutner', 'David Zocchi', 'Donna Coe', 'Donna Ball',
@@ -1402,21 +1400,23 @@ function hoursFor(shift, dayIdx, roleIdx) {
 let state = { people: [], assignments: [], closingTimes: [19, 19, 19, 19, 20, 20, 19] }; // Mon-Sun defaults
 
 async function load() {
-  // Try loading from GitHub first
-  if (USE_GITHUB_STORAGE && GITHUB_TOKEN) {
+  // Try loading from server first
+  if (USE_SERVER) {
     try {
-      const cloudState = await loadFromGitHub();
-      if (cloudState && Array.isArray(cloudState.people)) {
-        state = cloudState;
-        if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
-        if (!state.weeklyRotas) state.weeklyRotas = {};
-        ensureDefaultPeople();
-        console.log('✓ Loaded from cloud:', state.people.length, 'people');
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        return;
+      const response = await fetch(SERVER_URL);
+      if (response.ok) {
+        const serverState = await response.json();
+        if (serverState && Array.isArray(serverState.people)) {
+          state = serverState;
+          if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
+          if (!state.weeklyRotas) state.weeklyRotas = {};
+          console.log('✓ Loaded from server:', state.people.length, 'people');
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          return;
+        }
       }
     } catch (error) {
-      console.warn('Cloud load failed, using localStorage:', error);
+      console.warn('Server load failed, using localStorage:', error);
     }
   }
 
@@ -1427,7 +1427,6 @@ async function load() {
       state = s;
       if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
       if (!state.weeklyRotas) state.weeklyRotas = {};
-      ensureDefaultPeople();
       console.log('Loaded from localStorage:', state.people.length, 'people');
     } else {
       console.log('No saved state, initializing defaults');
@@ -1439,19 +1438,6 @@ async function load() {
   }
 }
 
-async function loadFromGitHub() {
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rota-data.json`;
-
-  const response = await fetch(url, {
-    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-  });
-
-  if (!response.ok) throw new Error('GitHub API error');
-
-  const data = await response.json();
-  const content = atob(data.content);
-  return JSON.parse(content);
-}
 
 function showNotification(message) {
   const notification = document.createElement('div');
@@ -1512,56 +1498,40 @@ function ensureDefaultPeople() {
 }
 async function save() {
   // Always save to localStorage as backup
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  console.log('State saved to localStorage');
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    console.log('State saved to localStorage');
+  } catch (localError) {
+    console.error('localStorage save failed:', localError);
+    showNotification('⚠ Save failed - localStorage error');
+    return;
+  }
 
-  // Save to GitHub if enabled
-  if (USE_GITHUB_STORAGE && GITHUB_TOKEN) {
+  // Save to server if enabled
+  if (USE_SERVER) {
     try {
-      await saveToGitHub();
-      console.log('✓ Saved to cloud');
-      showNotification('Saved to cloud ✓');
+      const response = await fetch(SERVER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state)
+      });
+      if (response.ok) {
+        console.log('✓ Saved to server');
+        showNotification('Saved to server ✓');
+      } else {
+        const errorText = await response.text();
+        console.error('Server error:', response.status, errorText);
+        throw new Error(`Server returned ${response.status}`);
+      }
     } catch (error) {
-      console.error('Cloud save failed:', error);
+      console.error('Server save failed:', error);
       showNotification('⚠ Saved locally only');
     }
+  } else {
+    showNotification('Saved locally ✓');
   }
 }
 
-async function saveToGitHub() {
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rota-data.json`;
-
-  // Get current file SHA (needed for update)
-  let sha = null;
-  try {
-    const getResponse = await fetch(url, {
-      headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-    });
-    if (getResponse.ok) {
-      const data = await getResponse.json();
-      sha = data.sha;
-    }
-  } catch (e) {}
-
-  // Update or create file
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-  const body = {
-    message: 'Update rota data',
-    content: content,
-    sha: sha
-  };
-
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${GITHUB_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) throw new Error('GitHub API error');
-}
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
 function escapeHtml(s) {

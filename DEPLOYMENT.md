@@ -2,7 +2,7 @@
 
 ## Upload These Files to Your Server
 
-Upload to: `https://rota.dbzocchi.app/`
+Upload to: `https://rotatool.dbzocchi.app/`
 
 ### Required Files:
 1. **index.html** - The main app
@@ -10,7 +10,7 @@ Upload to: `https://rota.dbzocchi.app/`
 
 ### File Structure on Server:
 ```
-rota.dbzocchi.app/
+rotatool.dbzocchi.app/
 ├── index.html
 ├── api.php
 └── rota-data.json (auto-created)
@@ -31,7 +31,7 @@ chmod 755 .  # Make directory writable for rota-data.json creation
 ```
 
 ### 3. Test
-Visit: `https://rota.dbzocchi.app/`
+Visit: `https://rotatool.dbzocchi.app/`
 
 You should see:
 - ✓ The rota manager loads
@@ -42,7 +42,7 @@ You should see:
 
 Just give them:
 ```
-https://rota.dbzocchi.app/
+https://rotatool.dbzocchi.app/
 ```
 
 Everyone who visits this URL:
@@ -55,6 +55,19 @@ Everyone who visits this URL:
 1. **index.html** - The app (runs in browser)
 2. **api.php** - Saves/loads data from `rota-data.json`
 3. **rota-data.json** - Stores all the rota data (auto-created)
+
+## Usage Tips
+
+**⚠️ IMPORTANT: Remove Staff Mode**
+- When you're done removing staff, **untoggle the "Remove Staff" button** in the hamburger menu
+- If left enabled, clicking staff will delete them instead of opening their settings
+- The button should NOT be highlighted when you're done removing people
+
+**Other Tips:**
+- Click staff cards to edit settings (unavailable days, excluded roles, etc.)
+- Drag staff from left panel to schedule grid on right
+- Use hamburger menu for Save/Load/Download features
+- Download creates a high-quality image with summary
 
 ## Troubleshooting
 
@@ -77,7 +90,7 @@ Everyone who visits this URL:
 ## Security
 
 Your reverse proxy should handle:
-- SSL/HTTPS (already done: ✓ https://rota.dbzocchi.app)
+- SSL/HTTPS (already done: ✓ https://rotatool.dbzocchi.app)
 - Authentication (if needed)
 - Access control
 
