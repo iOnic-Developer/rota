@@ -25,6 +25,14 @@
     --sub-alternating: #3d5a80;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
   html, body {
     margin: 0; padding: 0;
     width: 100vw; height: 100dvh;
@@ -919,6 +927,110 @@
     color: var(--text);
   }
   #closing-modal .exit-btn:hover { background: var(--border); }
+
+  /* Guide modal */
+  #guide-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1200;
+    overflow-y: auto;
+  }
+  #guide-modal.show { display: flex; }
+  #guide-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1.2em;
+    max-width: 40em;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  #guide-modal h2 {
+    margin: 0 0 0.8em 0;
+    color: var(--text);
+    font-size: 1.3em;
+  }
+  #guide-modal h3 {
+    margin: 1em 0 0.5em 0;
+    color: var(--accent);
+    font-size: 1.1em;
+  }
+  #guide-modal p, #guide-modal ul {
+    color: var(--muted);
+    font-size: 0.9em;
+    line-height: 1.6;
+  }
+  #guide-modal ul {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+  }
+  #guide-modal .close-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.6em 1.2em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    margin-top: 1em;
+    width: 100%;
+  }
+
+  /* Autofill modal */
+  #autofill-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1200;
+  }
+  #autofill-modal.show { display: flex; }
+  #autofill-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1em 1.1em;
+    min-width: 20em;
+  }
+  #autofill-modal .dialog-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.8em;
+  }
+  #autofill-modal .roles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5em;
+    margin-bottom: 1em;
+  }
+  #autofill-modal .role-check {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: 0.9em;
+  }
+  #autofill-modal .btn-row {
+    display: flex;
+    gap: 0.5em;
+  }
+  #autofill-modal button {
+    flex: 1;
+    padding: 0.6em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    border: 1px solid var(--border);
+  }
+  #autofill-modal .run-btn {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  #autofill-modal .cancel-btn {
+    background: var(--panel);
+    color: var(--text);
+  }
 </style>
 </head>
 <body>
@@ -938,6 +1050,8 @@
           <div class="menu-item" id="menu-add">Add Staff</div>
           <div class="menu-item" id="menu-remove">Remove Staff</div>
           <div class="menu-item" id="menu-closing">Set Closing Times</div>
+          <div class="menu-item" id="menu-autofill">Autofill Rota</div>
+          <div class="menu-item" id="menu-guide">How to Use</div>
         </div>
       </div>
     </header>
@@ -1093,6 +1207,12 @@
         <label>Recommended Full Shifts:</label>
         <input type="number" id="recommended-shifts" min="0" step="0.5" placeholder="4" />
       </div>
+      <div style="margin-top: 0.6em;">
+        <label class="role-check">
+          <input type="checkbox" id="exclude-autofill" />
+          Don't use in autofill
+        </label>
+      </div>
     </div>
     <div class="section">
       <div class="section-title">Exclude From</div>
@@ -1114,6 +1234,82 @@
     <div class="dialog-title" id="week-title">Manage Weekly Rota</div>
     <div id="week-content"></div>
     <button class="close-btn" id="week-close">Close</button>
+  </div>
+</div>
+
+<div id="guide-modal">
+  <div class="dialog">
+    <h2>How to Use Rota Manager</h2>
+
+    <h3>Adding Staff</h3>
+    <ul>
+      <li>Click the ☰ menu → "Add Staff" to add a new person</li>
+      <li>Drag person cards from the left onto the schedule grid</li>
+      <li>Select shift type (Morning/Evening/All Day) and optional modifiers</li>
+    </ul>
+
+    <h3>Managing People</h3>
+    <ul>
+      <li><strong>Click a person card</strong> to set:
+        <ul>
+          <li>Default shifts (quick load their usual schedule)</li>
+          <li>Unavailable days/times (shows conflicts if scheduled)</li>
+          <li>Excluded roles (positions they can't work)</li>
+          <li>Recommended shifts per week</li>
+          <li>Exclude from autofill</li>
+        </ul>
+      </li>
+      <li><strong>Remove Staff mode</strong>: ☰ → "Remove Staff" → click people to remove</li>
+    </ul>
+
+    <h3>Scheduling</h3>
+    <ul>
+      <li><strong>Drag existing shifts</strong> within same cell to reorder</li>
+      <li><strong>Click shift boxes</strong> to remove them</li>
+      <li><strong>Conflicts</strong> show as faded with "CONFLICT" text</li>
+      <li><strong>Sort</strong> people by name, shifts, or hours</li>
+    </ul>
+
+    <h3>Autofill</h3>
+    <ul>
+      <li>☰ → "Autofill Rota" to automatically fill empty shifts</li>
+      <li>Respects unavailable times, excluded roles, and recommendations</li>
+      <li>Balances shifts fairly across all staff</li>
+    </ul>
+
+    <h3>Saving & Loading</h3>
+    <ul>
+      <li><strong>Save</strong>: Pick a week to save the current schedule</li>
+      <li><strong>Load</strong>: Load a previously saved week</li>
+      <li><strong>Download</strong>: Export high-quality image for printing</li>
+    </ul>
+
+    <h3>Shift Times & Key</h3>
+    <ul>
+      <li>Set closing times per day (☰ → "Set Closing Times")</li>
+      <li>Kitchen & Fryer start at 9:30am, others at 10am</li>
+      <li>Morning/Evening split at 4pm</li>
+    </ul>
+
+    <button class="close-btn" id="guide-close">Got it!</button>
+  </div>
+</div>
+
+<div id="autofill-modal">
+  <div class="dialog">
+    <div class="dialog-title">Autofill Rota - Select Roles</div>
+    <div class="roles-grid">
+      <label class="role-check"><input type="checkbox" id="autofill-role-0" checked /> Fryer</label>
+      <label class="role-check"><input type="checkbox" id="autofill-role-1" checked /> Takeaway</label>
+      <label class="role-check"><input type="checkbox" id="autofill-role-2" checked /> Restaurant</label>
+      <label class="role-check"><input type="checkbox" id="autofill-role-3" checked /> Extra</label>
+      <label class="role-check"><input type="checkbox" id="autofill-role-4" checked /> Kitchen</label>
+      <label class="role-check"><input type="checkbox" id="autofill-role-5" /> New Side</label>
+    </div>
+    <div class="btn-row">
+      <button class="run-btn" id="autofill-run">Run Autofill</button>
+      <button class="cancel-btn" id="autofill-cancel">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -1167,6 +1363,12 @@ const ROLES = ['Fryer','Takeaway','Restaurant','Extra','Kitchen','New Side'];
 const CELL_MAX = 6;
 const STORAGE_KEY = 'rota-v1';
 
+// GitHub storage configuration
+const GITHUB_OWNER = 'iOnic-Developer'; // Your GitHub username
+const GITHUB_REPO = 'rota'; // Your repo name
+const GITHUB_TOKEN = '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'; // Put your GitHub token here (Settings → Developer → Personal Access Tokens → Classic)
+const USE_GITHUB_STORAGE = false; // Set to true to enable cloud storage
+
 const DEFAULT_PEOPLE = [
   'Alix Murton', 'Brooke Messrutner', 'David Zocchi', 'Donna Coe', 'Donna Ball',
   'Ellie Hollis', 'Evie Hollis', 'Gail Harris', 'Jay Tyler', 'Jayden Wilks',
@@ -1199,19 +1401,81 @@ function hoursFor(shift, dayIdx, roleIdx) {
 
 let state = { people: [], assignments: [], closingTimes: [19, 19, 19, 19, 20, 20, 19] }; // Mon-Sun defaults
 
-function load() {
+async function load() {
+  // Try loading from GitHub first
+  if (USE_GITHUB_STORAGE && GITHUB_TOKEN) {
+    try {
+      const cloudState = await loadFromGitHub();
+      if (cloudState && Array.isArray(cloudState.people)) {
+        state = cloudState;
+        if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
+        if (!state.weeklyRotas) state.weeklyRotas = {};
+        ensureDefaultPeople();
+        console.log('✓ Loaded from cloud:', state.people.length, 'people');
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        return;
+      }
+    } catch (error) {
+      console.warn('Cloud load failed, using localStorage:', error);
+    }
+  }
+
+  // Fallback to localStorage
   try {
     const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (s && Array.isArray(s.people) && Array.isArray(s.assignments)) {
       state = s;
       if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
+      if (!state.weeklyRotas) state.weeklyRotas = {};
       ensureDefaultPeople();
+      console.log('Loaded from localStorage:', state.people.length, 'people');
     } else {
+      console.log('No saved state, initializing defaults');
       initDefaultPeople();
     }
   } catch (e) {
+    console.error('Error loading:', e);
     initDefaultPeople();
   }
+}
+
+async function loadFromGitHub() {
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rota-data.json`;
+
+  const response = await fetch(url, {
+    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+  });
+
+  if (!response.ok) throw new Error('GitHub API error');
+
+  const data = await response.json();
+  const content = atob(data.content);
+  return JSON.parse(content);
+}
+
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 0.8em 1.2em;
+    border-radius: 0.3em;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 10000;
+    font-size: 0.9em;
+    animation: slideIn 0.3s ease;
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
 }
 
 function initDefaultPeople() {
@@ -1226,14 +1490,78 @@ function ensureDefaultPeople() {
 
   for (const name of DEFAULT_PEOPLE) {
     if (!existingNames.has(name.toLowerCase())) {
-      state.people.push({ id: uid(), name });
+      const newPerson = {
+        id: uid(),
+        name,
+        defaults: [],
+        unavailable: [],
+        excludedRoles: [],
+        recommendedShifts: 0,
+        excludeFromAutofill: false
+      };
+      state.people.push(newPerson);
       added = true;
+      console.log('Added missing default person:', name);
     }
   }
 
-  if (added) save();
+  if (added) {
+    console.log('Added', added, 'default people');
+    save();
+  }
 }
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+async function save() {
+  // Always save to localStorage as backup
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  console.log('State saved to localStorage');
+
+  // Save to GitHub if enabled
+  if (USE_GITHUB_STORAGE && GITHUB_TOKEN) {
+    try {
+      await saveToGitHub();
+      console.log('✓ Saved to cloud');
+      showNotification('Saved to cloud ✓');
+    } catch (error) {
+      console.error('Cloud save failed:', error);
+      showNotification('⚠ Saved locally only');
+    }
+  }
+}
+
+async function saveToGitHub() {
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rota-data.json`;
+
+  // Get current file SHA (needed for update)
+  let sha = null;
+  try {
+    const getResponse = await fetch(url, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+    });
+    if (getResponse.ok) {
+      const data = await getResponse.json();
+      sha = data.sha;
+    }
+  } catch (e) {}
+
+  // Update or create file
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+  const body = {
+    message: 'Update rota data',
+    content: content,
+    sha: sha
+  };
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) throw new Error('GitHub API error');
+}
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
 function escapeHtml(s) {
@@ -1410,13 +1738,28 @@ function rerenderCell(day, role) {
 function addPerson(name) {
   const n = name.trim();
   if (!n) return;
-  state.people.push({ id: uid(), name: n });
-  save(); renderPeople();
+  const newPerson = {
+    id: uid(),
+    name: n,
+    defaults: [],
+    unavailable: [],
+    excludedRoles: [],
+    recommendedShifts: 0,
+    excludeFromAutofill: false
+  };
+  state.people.push(newPerson);
+  save();
+  renderPeople();
+  console.log('Added person:', n);
 }
 function removePerson(personId) {
+  const person = state.people.find(p => p.id === personId);
+  if (person) console.log('Removing person:', person.name);
   state.people = state.people.filter(p => p.id !== personId);
   state.assignments = state.assignments.filter(a => a.personId !== personId);
-  save(); renderPeople(); renderGrid();
+  save();
+  renderPeople();
+  renderGrid();
 }
 function addAssignment(personId, day, role, shift, position, subType) {
   const cellAssignments = state.assignments.filter(a => a.day === day && a.role === role);
@@ -1785,6 +2128,16 @@ document.getElementById('menu-closing').addEventListener('click', () => {
   openClosingModal();
 });
 
+document.getElementById('menu-autofill').addEventListener('click', () => {
+  document.getElementById('menu-dropdown').classList.remove('show');
+  document.getElementById('autofill-modal').classList.add('show');
+});
+
+document.getElementById('menu-guide').addEventListener('click', () => {
+  document.getElementById('menu-dropdown').classList.remove('show');
+  document.getElementById('guide-modal').classList.add('show');
+});
+
 // Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
   const dropdown = document.getElementById('menu-dropdown');
@@ -1856,6 +2209,9 @@ function openDefaultsModal(person) {
   for (let i = 0; i < 6; i++) {
     document.getElementById(`exclude-${i}`).checked = excludedRoles.includes(i);
   }
+
+  // Load exclude from autofill
+  document.getElementById('exclude-autofill').checked = person.excludeFromAutofill || false;
 
   document.getElementById('defaults-modal').classList.add('show');
 }
@@ -1940,6 +2296,9 @@ document.getElementById('defaults-close').addEventListener('click', () => {
       // Save recommended shifts
       const recommended = parseFloat(document.getElementById('recommended-shifts').value);
       person.recommendedShifts = isNaN(recommended) ? 0 : recommended;
+
+      // Save exclude from autofill
+      person.excludeFromAutofill = document.getElementById('exclude-autofill').checked;
 
       save();
       renderGrid(); // Refresh to show conflicts
@@ -2068,9 +2427,181 @@ document.getElementById('closing-save').addEventListener('click', () => {
 
 document.getElementById('closing-exit').addEventListener('click', closeClosingModal);
 
-load();
-renderGrid();
-renderPeople();
+// Guide modal
+document.getElementById('guide-close').addEventListener('click', () => {
+  document.getElementById('guide-modal').classList.remove('show');
+});
+
+// Autofill modal
+document.getElementById('autofill-cancel').addEventListener('click', () => {
+  document.getElementById('autofill-modal').classList.remove('show');
+});
+
+document.getElementById('autofill-run').addEventListener('click', () => {
+  const selectedRoles = [];
+  for (let i = 0; i < 6; i++) {
+    if (document.getElementById(`autofill-role-${i}`).checked) {
+      selectedRoles.push(i);
+    }
+  }
+  document.getElementById('autofill-modal').classList.remove('show');
+  runAutofill(selectedRoles);
+});
+
+// Autofill algorithm
+function runAutofill(selectedRoles) {
+  // Coverage targets per role per day (in "full shift" equivalents)
+  const coverageTargets = {
+    0: 1,   // Fryer: 1 All Day
+    1: 2,   // Takeaway: 2 All Day
+    2: 2,   // Restaurant: 2 All Day
+    3: 1,   // Extra: 1 All Day
+    4: 2,   // Kitchen: 2 All Day
+    5: 0    // New Side: 0
+  };
+
+  // Get eligible people (not excluded from autofill)
+  const eligiblePeople = state.people.filter(p => !p.excludeFromAutofill && p.name !== 'Open Shift');
+
+  let addedCount = 0;
+
+  // For each day
+  for (let day = 0; day < 7; day++) {
+    // For each selected role
+    for (const role of selectedRoles) {
+      const target = coverageTargets[role];
+      if (target === 0) continue;
+
+      // Count current coverage for this day/role
+      const existing = state.assignments.filter(a => a.day === day && a.role === role);
+      let currentCoverage = 0;
+      for (const a of existing) {
+        if (a.shift === 'allday') currentCoverage += 1;
+        else if (a.shift === 'morning' || a.shift === 'evening') currentCoverage += 0.5;
+      }
+
+      // Calculate how many full shifts still needed
+      let needed = target - currentCoverage;
+
+      // Try to fill needed coverage
+      while (needed > 0) {
+        // Get candidates for this slot
+        const candidates = getCandidates(eligiblePeople, day, role, needed >= 1);
+
+        if (candidates.length === 0) break; // No one available
+
+        // Pick person with fewest current shifts (balanced allocation)
+        const person = candidates[0];
+
+        // Determine shift type
+        let shiftType;
+        if (needed >= 1) {
+          // Need full day, assign all day
+          shiftType = 'allday';
+          needed -= 1;
+        } else {
+          // Need half day - assign morning or evening based on availability
+          const unavail = person.unavailable?.[day] || {};
+          if (!unavail.morning && canAssign(person.id, day, 'morning')) {
+            shiftType = 'morning';
+          } else if (!unavail.evening && canAssign(person.id, day, 'evening')) {
+            shiftType = 'evening';
+          } else {
+            break; // Can't assign
+          }
+          needed -= 0.5;
+        }
+
+        // Add assignment
+        addAssignment(person.id, day, role, shiftType, undefined, null);
+        addedCount++;
+      }
+    }
+  }
+
+  renderPeople();
+  renderGrid();
+  alert(`Autofill complete! Added ${addedCount} shifts.`);
+}
+
+function getCandidates(eligiblePeople, day, role, needFullDay) {
+  const candidates = [];
+
+  for (const person of eligiblePeople) {
+    // Check if excluded from this role
+    if (person.excludedRoles?.includes(role)) continue;
+
+    // Check unavailability
+    const unavail = person.unavailable?.[day] || {};
+    if (needFullDay && (unavail.morning || unavail.evening)) continue;
+
+    // Check for conflicts (already scheduled on this day)
+    const dayAssignments = state.assignments.filter(a => a.personId === person.id && a.day === day);
+
+    // Can't have overlapping full days
+    if (needFullDay && dayAssignments.some(a => a.shift === 'allday')) continue;
+
+    // Can't have more than 2 half shifts same day
+    if (dayAssignments.length >= 2) continue;
+
+    // Can't have same half shift twice
+    if (!needFullDay) {
+      if (dayAssignments.some(a => a.shift === 'morning' || a.shift === 'allday')) {
+        if (unavail.evening) continue; // Only evening available but it's blocked
+      }
+      if (dayAssignments.some(a => a.shift === 'evening' || a.shift === 'allday')) {
+        if (unavail.morning) continue; // Only morning available but it's blocked
+      }
+    }
+
+    // Calculate current shift count
+    const currentShifts = statsFor(person.id).shifts;
+    const recommended = person.recommendedShifts || 0;
+    const deficit = recommended > 0 ? recommended - currentShifts : 0;
+
+    candidates.push({ person, currentShifts, deficit });
+  }
+
+  // Sort by deficit (those furthest from recommendation first), then by fewest shifts
+  candidates.sort((a, b) => {
+    if (b.deficit !== a.deficit) return b.deficit - a.deficit;
+    return a.currentShifts - b.currentShifts;
+  });
+
+  return candidates.map(c => c.person);
+}
+
+function canAssign(personId, day, shiftType) {
+  const dayAssignments = state.assignments.filter(a => a.personId === personId && a.day === day);
+
+  if (shiftType === 'allday') {
+    return dayAssignments.length === 0;
+  }
+
+  if (shiftType === 'morning') {
+    return !dayAssignments.some(a => a.shift === 'morning' || a.shift === 'allday');
+  }
+
+  if (shiftType === 'evening') {
+    return !dayAssignments.some(a => a.shift === 'evening' || a.shift === 'allday');
+  }
+
+  return false;
+}
+
+load().then(() => {
+
+// Auto-load current week if it exists
+const currentWeek = getWeekNumber(new Date());
+const currentWeekKey = `${currentWeek.year}-W${String(currentWeek.week).padStart(2, '0')}`;
+if (state.weeklyRotas && state.weeklyRotas[currentWeekKey]) {
+  state.assignments = JSON.parse(JSON.stringify(state.weeklyRotas[currentWeekKey]));
+  console.log(`Auto-loaded week ${currentWeek.week} (${currentWeekKey})`);
+}
+
+  renderGrid();
+  renderPeople();
+});
 
 })();
 </script>
