@@ -129,23 +129,6 @@
     color: white;
   }
 
-  .toggle-view-btn {
-    background: var(--panel-2); color: var(--text);
-    border: 1px solid var(--border);
-    padding: 0.4em 0.7em;
-    border-radius: 0.3em;
-    cursor: pointer;
-    font-size: 0.85em;
-    font-weight: 500;
-    white-space: nowrap;
-    position: absolute;
-    top: 0.5em;
-    right: 0.6em;
-    z-index: 100;
-  }
-  .toggle-view-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
-  #app.view-only .toggle-view-btn { left: 0.6em; right: auto; }
-
   .action-buttons {
     display: flex; gap: 0.4em; padding: 0.5em 0.6em;
     border-top: 1px solid var(--border);
@@ -334,7 +317,7 @@
     flex: 1; min-width: 0;
     display: grid;
     grid-template-columns: auto repeat(7, 1fr);
-    grid-template-rows: auto repeat(6, 1fr);
+    grid-template-rows: auto auto repeat(6, 1fr);
     gap: 2px;
     background: var(--border);
     padding: 2px;
@@ -348,6 +331,20 @@
     font-size: 0.95em;
   }
   .role-label { padding: 0 0.5em; white-space: nowrap; }
+
+  .staffing-indicator {
+    background: var(--panel);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75em;
+    padding: 0.2em;
+    min-height: 1.5em;
+    font-weight: 500;
+  }
+  .staffing-indicator.understaffed { color: #ff6b6b; }
+  .staffing-indicator.overstaffed { color: #ffa94d; }
+  .staffing-corner {
+    background: var(--panel);
+  }
 
   .cell {
     background: var(--panel-2);
@@ -928,6 +925,84 @@
   }
   #closing-modal .exit-btn:hover { background: var(--border); }
 
+  /* Autofill Settings modal */
+  #autofill-settings-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+  }
+  #autofill-settings-modal.show { display: flex; }
+  #autofill-settings-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1.2em;
+    min-width: 22em;
+    display: flex; flex-direction: column; gap: 0.6em;
+  }
+  #autofill-settings-modal .dialog-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 1em;
+    margin-bottom: 0.5em;
+  }
+  #autofill-settings-modal .settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    margin-bottom: 0.5em;
+  }
+  #autofill-settings-modal .setting-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+  }
+  #autofill-settings-modal .setting-row label {
+    flex: 1;
+    font-size: 0.9em;
+    color: var(--text);
+  }
+  #autofill-settings-modal input {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.4em 0.5em;
+    border-radius: 0.3em;
+    font-size: 0.9em;
+    width: 4.5em;
+    text-align: center;
+  }
+  #autofill-settings-modal input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  #autofill-settings-modal .btn-row {
+    display: flex; gap: 0.5em;
+    margin-top: 0.5em;
+  }
+  #autofill-settings-modal .btn-row button {
+    flex: 1;
+    padding: 0.6em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    border: 1px solid var(--border);
+  }
+  #autofill-settings-modal .save-btn {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  #autofill-settings-modal .save-btn:hover { filter: brightness(1.1); }
+  #autofill-settings-modal .exit-btn {
+    background: var(--panel);
+    color: var(--text);
+  }
+  #autofill-settings-modal .exit-btn:hover { background: var(--border); }
+
   /* Guide modal */
   #guide-modal {
     position: fixed; inset: 0;
@@ -1035,7 +1110,6 @@
 </head>
 <body>
 <div id="app">
-  <button class="toggle-view-btn" id="toggle-view">View Rota Only</button>
   <aside id="left">
     <header>
       <h1>Rota</h1>
@@ -1049,8 +1123,10 @@
         <div class="menu-dropdown" id="menu-dropdown">
           <div class="menu-item" id="menu-add">Add Staff</div>
           <div class="menu-item" id="menu-remove">Remove Staff</div>
+          <div class="menu-item" id="menu-view-only">View Rota Only</div>
           <div class="menu-item" id="menu-closing">Set Closing Times</div>
           <div class="menu-item" id="menu-autofill">Autofill Rota</div>
+          <div class="menu-item" id="menu-autofill-settings">Autofill Settings</div>
           <div class="menu-item" id="menu-guide">How to Use</div>
         </div>
       </div>
@@ -1118,7 +1194,10 @@
       <button data-subtype="alternating">Alt.</button>
     </div>
   </div>
-  <button class="pop-confirm" id="pop-confirm">Add</button>
+  <div style="display: flex; gap: 0.5em;">
+    <button class="pop-confirm" id="pop-confirm">Update</button>
+    <button class="pop-delete" id="pop-delete" style="display: none; background: #c44; flex: 1;">Delete</button>
+  </div>
 </div>
 
 <div id="name-modal">
@@ -1353,6 +1432,42 @@
   </div>
 </div>
 
+<div id="autofill-settings-modal">
+  <div class="dialog">
+    <div class="dialog-title">Autofill Settings - Shifts per Day</div>
+    <div class="settings-grid">
+      <div class="setting-row">
+        <label for="coverage-0">Fryer:</label>
+        <input type="number" id="coverage-0" min="0" max="10" step="0.5" />
+      </div>
+      <div class="setting-row">
+        <label for="coverage-1">Takeaway:</label>
+        <input type="number" id="coverage-1" min="0" max="10" step="0.5" />
+      </div>
+      <div class="setting-row">
+        <label for="coverage-2">Restaurant:</label>
+        <input type="number" id="coverage-2" min="0" max="10" step="0.5" />
+      </div>
+      <div class="setting-row">
+        <label for="coverage-3">Extra:</label>
+        <input type="number" id="coverage-3" min="0" max="10" step="0.5" />
+      </div>
+      <div class="setting-row">
+        <label for="coverage-4">Kitchen:</label>
+        <input type="number" id="coverage-4" min="0" max="10" step="0.5" />
+      </div>
+      <div class="setting-row">
+        <label for="coverage-5">New Side:</label>
+        <input type="number" id="coverage-5" min="0" max="10" step="0.5" />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="save-btn" id="autofill-settings-save">Save</button>
+      <button class="exit-btn" id="autofill-settings-exit">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 (() => {
@@ -1397,7 +1512,12 @@ function hoursFor(shift, dayIdx, roleIdx) {
   return 0;
 }
 
-let state = { people: [], assignments: [], closingTimes: [19, 19, 19, 19, 20, 20, 19] }; // Mon-Sun defaults
+let state = {
+  people: [],
+  assignments: [],
+  closingTimes: [19, 19, 19, 19, 20, 20, 19], // Mon-Sun defaults
+  coverageTargets: [1, 2, 2, 1, 2, 0] // Fryer, Takeaway, Restaurant, Extra, Kitchen, New Side
+};
 
 async function load() {
   // Try loading from server first
@@ -1410,6 +1530,7 @@ async function load() {
           state = serverState;
           if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
           if (!state.weeklyRotas) state.weeklyRotas = {};
+          if (!state.coverageTargets) state.coverageTargets = [1, 2, 2, 1, 2, 0];
           console.log('✓ Loaded from server:', state.people.length, 'people');
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           return;
@@ -1427,6 +1548,7 @@ async function load() {
       state = s;
       if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
       if (!state.weeklyRotas) state.weeklyRotas = {};
+      if (!state.coverageTargets) state.coverageTargets = [1, 2, 2, 1, 2, 0];
       console.log('Loaded from localStorage:', state.people.length, 'people');
     } else {
       console.log('No saved state, initializing defaults');
@@ -1604,6 +1726,31 @@ function renderPeople() {
   }
 }
 
+function getStaffingStatus(day) {
+  const coverageTargets = state.coverageTargets || [1, 2, 2, 1, 2, 0];
+
+  let totalTarget = 0;
+  let totalCurrent = 0;
+
+  for (let role = 0; role < ROLES.length; role++) {
+    const target = coverageTargets[role] || 0;
+    totalTarget += target;
+
+    // Count current coverage for this day/role
+    const existing = state.assignments.filter(a => a.day === day && a.role === role);
+    let currentCoverage = 0;
+    for (const a of existing) {
+      if (a.shift === 'allday') currentCoverage += 1;
+      else if (a.shift === 'morning' || a.shift === 'evening') currentCoverage += 0.5;
+    }
+    totalCurrent += currentCoverage;
+  }
+
+  if (totalCurrent < totalTarget) return 'understaffed';
+  if (totalCurrent > totalTarget) return 'overstaffed';
+  return '';
+}
+
 function renderGrid() {
   const el = document.getElementById('right');
   el.innerHTML = '';
@@ -1616,6 +1763,22 @@ function renderGrid() {
     h.textContent = d;
     el.appendChild(h);
   }
+
+  // Add staffing indicator row
+  const staffingCorner = document.createElement('div');
+  staffingCorner.className = 'staffing-corner';
+  el.appendChild(staffingCorner);
+  for (let d = 0; d < DAYS.length; d++) {
+    const indicator = document.createElement('div');
+    indicator.className = 'staffing-indicator';
+    const status = getStaffingStatus(d);
+    if (status) {
+      indicator.classList.add(status);
+      indicator.textContent = status === 'understaffed' ? 'Understaffed' : 'Overstaffed';
+    }
+    el.appendChild(indicator);
+  }
+
   for (let r = 0; r < ROLES.length; r++) {
     const rl = document.createElement('div');
     rl.className = 'role-label';
@@ -1685,9 +1848,12 @@ function renderCell(cell, day, role) {
         <div class="m-badge-strip">${badge}</div>
       `;
       const subTypeText = a.subType ? ` (${a.subType})` : '';
-      m.title = `${person.name} — ${a.shift}${subTypeText} (drag to move, click to remove)`;
+      m.title = `${person.name} — ${a.shift}${subTypeText} (drag to move, click to edit)`;
       m.addEventListener('click', (e) => {
-        if (!drag) removeAssignment(a.id);
+        if (!drag) {
+          e.stopPropagation();
+          openEditPopover(a, person, e.clientX, e.clientY);
+        }
       });
       attachMiniDrag(m, a, person, day, role);
       cell.appendChild(m);
@@ -1703,6 +1869,23 @@ function renderCell(cell, day, role) {
 function rerenderCell(day, role) {
   const cell = document.querySelector(`.cell[data-day="${day}"][data-role="${role}"]`);
   if (cell) renderCell(cell, day, role);
+}
+
+function updateStaffingIndicators() {
+  const indicators = document.querySelectorAll('.staffing-indicator');
+  for (let d = 0; d < DAYS.length; d++) {
+    const indicator = indicators[d];
+    if (!indicator) continue;
+
+    const status = getStaffingStatus(d);
+    indicator.className = 'staffing-indicator';
+    if (status) {
+      indicator.classList.add(status);
+      indicator.textContent = status === 'understaffed' ? 'Understaffed' : 'Overstaffed';
+    } else {
+      indicator.textContent = '';
+    }
+  }
 }
 
 function addPerson(name) {
@@ -1746,20 +1929,20 @@ function addAssignment(personId, day, role, shift, position, subType) {
   }
 
   state.assignments.push({ id: uid(), personId, day, role, shift, position, subType });
-  save(); rerenderCell(day, role); renderPeople();
+  save(); rerenderCell(day, role); renderPeople(); updateStaffingIndicators();
   return true;
 }
 function moveAssignment(assignmentId, newPosition) {
   const a = state.assignments.find(x => x.id === assignmentId);
   if (!a) return;
   a.position = newPosition;
-  save(); rerenderCell(a.day, a.role);
+  save(); rerenderCell(a.day, a.role); updateStaffingIndicators();
 }
 function removeAssignment(aid) {
   const a = state.assignments.find(x => x.id === aid);
   if (!a) return;
   state.assignments = state.assignments.filter(x => x.id !== aid);
-  save(); rerenderCell(a.day, a.role); renderPeople();
+  save(); rerenderCell(a.day, a.role); renderPeople(); updateStaffingIndicators();
 }
 function shakeCell(day, role) {
   const cell = document.querySelector(`.cell[data-day="${day}"][data-role="${role}"]`);
@@ -1872,13 +2055,13 @@ function onDragEnd(e) {
         }
         return;
       } else {
-        // Different cell - remove and create new
+        // Different cell - remove and create new as All Day
         removeAssignment(assignment.id);
-        openPopover(person, day, role, e.clientX, e.clientY);
+        addAssignment(person.id, day, role, 'allday', undefined, null);
       }
     } else {
-      // New assignment from person card
-      openPopover(person, day, role, e.clientX, e.clientY);
+      // New assignment from person card - default to All Day
+      addAssignment(person.id, day, role, 'allday', undefined, null);
     }
   }
 }
@@ -1893,16 +2076,22 @@ function slotFromPoint(x, y, cell) {
 
 const pop = document.getElementById('popover');
 let pending = null;
+let editingAssignment = null;
 let selectedShift = null;
 let selectedSubType = null;
 
 function openPopover(person, day, role, x, y, position) {
   pending = { personId: person.id, day, role, position };
+  editingAssignment = null;
   selectedShift = null;
   selectedSubType = null;
 
   // Clear previous selections
   pop.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+
+  // Hide delete button, change confirm text to "Add"
+  document.getElementById('pop-delete').style.display = 'none';
+  document.getElementById('pop-confirm').textContent = 'Add';
 
   pop.classList.add('show');
   pop.style.left = '0px'; pop.style.top = '0px';
@@ -1915,8 +2104,41 @@ function openPopover(person, day, role, x, y, position) {
 function closePopover() {
   pop.classList.remove('show');
   pending = null;
+  editingAssignment = null;
   selectedShift = null;
   selectedSubType = null;
+}
+
+function openEditPopover(assignment, person, x, y) {
+  editingAssignment = assignment;
+  pending = null;
+  selectedShift = assignment.shift;
+  selectedSubType = assignment.subType || null;
+
+  // Clear and set selections
+  pop.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+
+  // Set shift selection
+  const shiftBtn = pop.querySelector(`[data-shift="${assignment.shift}"]`);
+  if (shiftBtn) shiftBtn.classList.add('selected');
+
+  // Set subtype selection
+  if (assignment.subType) {
+    const subtypeBtn = pop.querySelector(`[data-subtype="${assignment.subType}"]`);
+    if (subtypeBtn) subtypeBtn.classList.add('selected');
+  }
+
+  // Show delete button, change confirm text
+  document.getElementById('pop-delete').style.display = 'block';
+  document.getElementById('pop-confirm').textContent = 'Update';
+
+  pop.classList.add('show');
+  pop.style.left = '0px'; pop.style.top = '0px';
+  const rect = pop.getBoundingClientRect();
+  const nx = Math.min(Math.max(4, x - rect.width / 2), window.innerWidth  - rect.width  - 4);
+  const ny = Math.min(Math.max(4, y + 10),              window.innerHeight - rect.height - 4);
+  pop.style.left = nx + 'px';
+  pop.style.top  = ny + 'px';
 }
 
 pop.addEventListener('click', (e) => {
@@ -1938,9 +2160,25 @@ pop.addEventListener('click', (e) => {
       pop.querySelectorAll('[data-subtype]').forEach(btn => btn.classList.remove('selected'));
       b.classList.add('selected');
     }
-  } else if (b.id === 'pop-confirm' && pending && selectedShift) {
-    // Confirm button
-    addAssignment(pending.personId, pending.day, pending.role, selectedShift, pending.position, selectedSubType);
+  } else if (b.id === 'pop-confirm') {
+    // Confirm button - either add new or update existing
+    if (editingAssignment && selectedShift) {
+      // Update existing assignment
+      editingAssignment.shift = selectedShift;
+      editingAssignment.subType = selectedSubType;
+      save();
+      rerenderCell(editingAssignment.day, editingAssignment.role);
+      renderPeople();
+      updateStaffingIndicators();
+      closePopover();
+    } else if (pending && selectedShift) {
+      // Add new assignment
+      addAssignment(pending.personId, pending.day, pending.role, selectedShift, pending.position, selectedSubType);
+      closePopover();
+    }
+  } else if (b.id === 'pop-delete' && editingAssignment) {
+    // Delete button
+    removeAssignment(editingAssignment.id);
     closePopover();
   }
 });
@@ -2046,16 +2284,11 @@ document.getElementById('download-btn').addEventListener('click', async () => {
   toggleViewBtn.style.display = '';
 });
 
-document.getElementById('toggle-view').addEventListener('click', () => {
+document.getElementById('menu-view-only').addEventListener('click', () => {
   const app = document.getElementById('app');
-  const btn = document.getElementById('toggle-view');
-  if (app.classList.contains('view-only')) {
-    app.classList.remove('view-only');
-    btn.textContent = 'View Rota Only';
-  } else {
-    app.classList.add('view-only');
-    btn.textContent = 'Back to Edit';
-  }
+  const menu = document.getElementById('menu-dropdown');
+  menu.classList.remove('show');
+  app.classList.toggle('view-only');
 });
 
 document.getElementById('sort-select').addEventListener('change', (e) => {
@@ -2101,6 +2334,11 @@ document.getElementById('menu-closing').addEventListener('click', () => {
 document.getElementById('menu-autofill').addEventListener('click', () => {
   document.getElementById('menu-dropdown').classList.remove('show');
   document.getElementById('autofill-modal').classList.add('show');
+});
+
+document.getElementById('menu-autofill-settings').addEventListener('click', () => {
+  document.getElementById('menu-dropdown').classList.remove('show');
+  openAutofillSettingsModal();
 });
 
 document.getElementById('menu-guide').addEventListener('click', () => {
@@ -2383,6 +2621,30 @@ function closeClosingModal() {
   document.getElementById('closing-modal').classList.remove('show');
 }
 
+function openAutofillSettingsModal() {
+  const targets = state.coverageTargets || [1, 2, 2, 1, 2, 0];
+  for (let i = 0; i < 6; i++) {
+    document.getElementById(`coverage-${i}`).value = targets[i];
+  }
+  document.getElementById('autofill-settings-modal').classList.add('show');
+}
+
+function closeAutofillSettingsModal() {
+  document.getElementById('autofill-settings-modal').classList.remove('show');
+}
+
+function saveAutofillSettings() {
+  const targets = [];
+  for (let i = 0; i < 6; i++) {
+    const value = parseFloat(document.getElementById(`coverage-${i}`).value) || 0;
+    targets.push(value);
+  }
+  state.coverageTargets = targets;
+  save();
+  renderGrid(); // Update staffing indicators
+  closeAutofillSettingsModal();
+}
+
 document.getElementById('closing-save').addEventListener('click', () => {
   const closingTimes = [];
   for (let i = 0; i < 7; i++) {
@@ -2396,6 +2658,9 @@ document.getElementById('closing-save').addEventListener('click', () => {
 });
 
 document.getElementById('closing-exit').addEventListener('click', closeClosingModal);
+
+document.getElementById('autofill-settings-save').addEventListener('click', saveAutofillSettings);
+document.getElementById('autofill-settings-exit').addEventListener('click', closeAutofillSettingsModal);
 
 // Guide modal
 document.getElementById('guide-close').addEventListener('click', () => {
@@ -2421,14 +2686,7 @@ document.getElementById('autofill-run').addEventListener('click', () => {
 // Autofill algorithm
 function runAutofill(selectedRoles) {
   // Coverage targets per role per day (in "full shift" equivalents)
-  const coverageTargets = {
-    0: 1,   // Fryer: 1 All Day
-    1: 2,   // Takeaway: 2 All Day
-    2: 2,   // Restaurant: 2 All Day
-    3: 1,   // Extra: 1 All Day
-    4: 2,   // Kitchen: 2 All Day
-    5: 0    // New Side: 0
-  };
+  const coverageTargets = state.coverageTargets || [1, 2, 2, 1, 2, 0];
 
   // Get eligible people (not excluded from autofill)
   const eligiblePeople = state.people.filter(p => !p.excludeFromAutofill && p.name !== 'Open Shift');
@@ -2439,7 +2697,7 @@ function runAutofill(selectedRoles) {
   for (let day = 0; day < 7; day++) {
     // For each selected role
     for (const role of selectedRoles) {
-      const target = coverageTargets[role];
+      const target = coverageTargets[role] || 0;
       if (target === 0) continue;
 
       // Count current coverage for this day/role
