@@ -78,6 +78,49 @@
   }
   .icon-btn:hover { filter: brightness(1.1); }
 
+  .menu-container {
+    position: relative;
+  }
+  .menu-btn {
+    background: var(--accent); color: white;
+    border: none; border-radius: 0.3em;
+    width: 2.2em; height: 1.8em;
+    font-size: 1.2em; line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .menu-btn:hover { filter: brightness(1.1); }
+  .menu-dropdown {
+    position: absolute;
+    top: calc(100% + 0.3em);
+    left: 0;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 200;
+    display: none;
+    min-width: 10em;
+  }
+  .menu-dropdown.show { display: block; }
+  .menu-dropdown .menu-item {
+    padding: 0.6em 0.8em;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 0.85em;
+    border-bottom: 1px solid var(--border);
+  }
+  .menu-dropdown .menu-item:last-child { border-bottom: none; }
+  .menu-dropdown .menu-item:hover {
+    background: var(--accent);
+    color: white;
+  }
+  .menu-dropdown .menu-item.remove-mode-active {
+    background: var(--danger);
+    color: white;
+  }
+
   .toggle-view-btn {
     background: var(--panel-2); color: var(--text);
     border: 1px solid var(--border);
@@ -124,10 +167,13 @@
     margin-bottom: 0.5em;
     padding-bottom: 0.5em;
     border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   #text-summary .summary-item:last-child { border-bottom: none; }
-  #text-summary .summary-name { font-weight: 600; color: var(--accent); }
-  #text-summary .summary-stats { color: var(--muted); font-size: 0.95em; margin-left: 0.5em; }
+  #text-summary .summary-name { font-weight: 600; color: var(--accent); text-align: left; }
+  #text-summary .summary-stats { color: var(--muted); font-size: 0.95em; text-align: right; }
 
   #people {
     flex: 1; min-height: 0;
@@ -155,6 +201,10 @@
     padding-right: 1em;
     text-align: left;
   }
+  .person .name.open-shift {
+    color: #e5484d;
+    font-style: italic;
+  }
   .person .shifts-total {
     font-size: 0.85em;
     text-align: right;
@@ -177,8 +227,17 @@
     background: transparent; border: none; color: var(--muted);
     font-size: 0.9em; cursor: pointer; line-height: 1;
     padding: 0.1em 0.3em;
+    display: none;
   }
   .person .del:hover { color: var(--danger); }
+  .person.remove-mode {
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  .person.remove-mode:hover {
+    background: var(--danger);
+    opacity: 1;
+  }
 
   #legend {
     padding: 0.6em 0.7em;
@@ -353,6 +412,12 @@
     opacity: 0.85;
   }
 
+  .mini.open-shift .m-first,
+  .mini.open-shift .m-last {
+    color: #e5484d;
+    font-style: italic;
+  }
+
   .mini .m-badge-strip {
     flex: 0 0 1.6em;
     display: flex;
@@ -379,6 +444,27 @@
   .mini.allday .m-badge-strip {
     background: var(--allday);
     color: #0a1410;
+  }
+
+  /* Conflict indicator */
+  .mini.conflict {
+    opacity: 0.4;
+    position: relative;
+  }
+  .mini.conflict::after {
+    content: 'CONFLICT';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 0.65em;
+    font-weight: 700;
+    color: var(--danger);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    white-space: nowrap;
+    text-shadow: 0 0 3px rgba(0,0,0,0.8);
   }
 
   /* Diagonal sub-type indicator */
@@ -557,7 +643,8 @@
     border: 1px solid var(--border);
     border-radius: 0.5em;
     padding: 1em 1.1em;
-    min-width: 16em;
+    min-width: 20em;
+    max-width: 90vw;
     display: flex; flex-direction: column; gap: 0.6em;
   }
   #defaults-modal .dialog-title {
@@ -566,8 +653,46 @@
     font-size: 1em;
     margin-bottom: 0.3em;
   }
+  #defaults-modal label {
+    font-size: 0.85em;
+    color: var(--muted);
+    margin-bottom: 0.2em;
+  }
+  #defaults-modal select {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    padding: 0.5em;
+    font-size: 0.9em;
+    outline: none;
+    width: 100%;
+  }
+  #defaults-modal select:focus { border-color: var(--accent); }
+  #defaults-modal .action-btn {
+    background: var(--accent); color: white;
+    border: 1px solid var(--accent);
+    padding: 0.6em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    width: 100%;
+  }
+  #defaults-modal .action-btn:hover { filter: brightness(1.1); }
+  #defaults-modal .close-btn {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.85em;
+    margin-top: 0.3em;
+  }
+  #defaults-modal .close-btn:hover {
+    background: var(--border);
+  }
   #defaults-modal .btn-row { display: flex; gap: 0.5em; }
-  #defaults-modal button {
+  #defaults-modal .btn-row button {
     flex: 1;
     background: var(--panel); color: var(--text);
     border: 1px solid var(--border);
@@ -577,12 +702,208 @@
     font-size: 0.9em;
     font-weight: 500;
   }
-  #defaults-modal button:hover {
+  #defaults-modal .btn-row button:hover {
     background: var(--accent); border-color: var(--accent); color: white;
   }
-  #defaults-modal .close-btn {
+  #defaults-modal .section {
+    margin-top: 0.8em;
+    padding-top: 0.8em;
+    border-top: 1px solid var(--border);
+  }
+  #defaults-modal .section-title {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.5em;
+  }
+  #defaults-modal .days-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+  }
+  #defaults-modal .day-row {
+    display: grid;
+    grid-template-columns: 5em 1fr;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 0.85em;
+  }
+  #defaults-modal .day-name {
+    font-weight: 500;
+  }
+  #defaults-modal .day-shifts {
+    display: flex;
+    gap: 0.8em;
+  }
+  #defaults-modal .shift-check {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+  #defaults-modal .shift-check input[type="checkbox"] {
+    cursor: pointer;
+  }
+  #defaults-modal .recommended-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-top: 0.5em;
+  }
+  #defaults-modal .recommended-input label {
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+  #defaults-modal .recommended-input input {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    padding: 0.4em;
+    font-size: 0.9em;
+    width: 4em;
+    text-align: center;
+  }
+
+  /* Week modal */
+  #week-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1200;
+  }
+  #week-modal.show { display: flex; }
+  #week-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1em 1.1em;
+    min-width: 20em;
+    max-width: 90vw;
+    display: flex; flex-direction: column; gap: 0.6em;
+  }
+  #week-modal .dialog-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 1em;
+    margin-bottom: 0.3em;
+  }
+  #week-modal label {
+    font-size: 0.85em;
+    color: var(--muted);
+    margin-bottom: 0.2em;
+  }
+  #week-modal select {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    padding: 0.5em;
+    font-size: 0.9em;
+    outline: none;
+    width: 100%;
+  }
+  #week-modal select:focus { border-color: var(--accent); }
+  #week-modal .action-btn {
+    background: var(--accent); color: white;
+    border: 1px solid var(--accent);
+    padding: 0.6em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    width: 100%;
+  }
+  #week-modal .action-btn:hover { filter: brightness(1.1); }
+  #week-modal .close-btn {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.85em;
     margin-top: 0.3em;
   }
+  #week-modal .close-btn:hover {
+    background: var(--border);
+  }
+
+  /* Closing times modal */
+  #closing-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1200;
+  }
+  #closing-modal.show { display: flex; }
+  #closing-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1em 1.1em;
+    min-width: 28em;
+    max-width: 90vw;
+    display: flex; flex-direction: column; gap: 0.6em;
+  }
+  #closing-modal .dialog-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 1em;
+    margin-bottom: 0.3em;
+  }
+  #closing-modal .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5em;
+  }
+  #closing-modal .day-input {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+  }
+  #closing-modal .day-label {
+    font-size: 0.75em;
+    color: var(--muted);
+    text-align: center;
+    font-weight: 600;
+  }
+  #closing-modal input {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    padding: 0.5em 0.3em;
+    font-size: 0.85em;
+    text-align: center;
+    outline: none;
+  }
+  #closing-modal input:focus { border-color: var(--accent); }
+  #closing-modal input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
+    cursor: pointer;
+  }
+  #closing-modal .btn-row {
+    display: flex; gap: 0.5em;
+    margin-top: 0.3em;
+  }
+  #closing-modal .btn-row button {
+    flex: 1;
+    padding: 0.6em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    border: 1px solid var(--border);
+  }
+  #closing-modal .save-btn {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  #closing-modal .save-btn:hover { filter: brightness(1.1); }
+  #closing-modal .exit-btn {
+    background: var(--panel);
+    color: var(--text);
+  }
+  #closing-modal .exit-btn:hover { background: var(--border); }
 </style>
 </head>
 <body>
@@ -596,7 +917,14 @@
         <option value="shifts">Sort: Shifts</option>
         <option value="hours">Sort: Hours</option>
       </select>
-      <button class="icon-btn" id="add-btn" title="Add person" aria-label="Add person">+</button>
+      <div class="menu-container">
+        <button class="menu-btn" id="menu-btn" title="Menu" aria-label="Menu">☰</button>
+        <div class="menu-dropdown" id="menu-dropdown">
+          <div class="menu-item" id="menu-add">Add Staff</div>
+          <div class="menu-item" id="menu-remove">Remove Staff</div>
+          <div class="menu-item" id="menu-closing">Set Closing Times</div>
+        </div>
+      </div>
     </header>
     <div id="people"></div>
     <div id="text-summary"></div>
@@ -693,7 +1021,113 @@
       <button id="set-defaults-btn">Set Defaults</button>
       <button id="load-defaults-btn">Load Defaults</button>
     </div>
+    <div class="section">
+      <div class="section-title">Unavailable Days</div>
+      <div class="days-checks">
+        <div class="day-row">
+          <span class="day-name">Monday</span>
+          <div class="day-shifts">
+            <label class="shift-check"><input type="checkbox" id="unavail-0-m" /> M</label>
+            <label class="shift-check"><input type="checkbox" id="unavail-0-e" /> E</label>
+          </div>
+        </div>
+        <div class="day-row">
+          <span class="day-name">Tuesday</span>
+          <div class="day-shifts">
+            <label class="shift-check"><input type="checkbox" id="unavail-1-m" /> M</label>
+            <label class="shift-check"><input type="checkbox" id="unavail-1-e" /> E</label>
+          </div>
+        </div>
+        <div class="day-row">
+          <span class="day-name">Wednesday</span>
+          <div class="day-shifts">
+            <label class="shift-check"><input type="checkbox" id="unavail-2-m" /> M</label>
+            <label class="shift-check"><input type="checkbox" id="unavail-2-e" /> E</label>
+          </div>
+        </div>
+        <div class="day-row">
+          <span class="day-name">Thursday</span>
+          <div class="day-shifts">
+            <label class="shift-check"><input type="checkbox" id="unavail-3-m" /> M</label>
+            <label class="shift-check"><input type="checkbox" id="unavail-3-e" /> E</label>
+          </div>
+        </div>
+        <div class="day-row">
+          <span class="day-name">Friday</span>
+          <div class="day-shifts">
+            <label class="shift-check"><input type="checkbox" id="unavail-4-m" /> M</label>
+            <label class="shift-check"><input type="checkbox" id="unavail-4-e" /> E</label>
+          </div>
+        </div>
+        <div class="day-row">
+          <span class="day-name">Saturday</span>
+          <div class="day-shifts">
+            <label class="shift-check"><input type="checkbox" id="unavail-5-m" /> M</label>
+            <label class="shift-check"><input type="checkbox" id="unavail-5-e" /> E</label>
+          </div>
+        </div>
+        <div class="day-row">
+          <span class="day-name">Sunday</span>
+          <div class="day-shifts">
+            <label class="shift-check"><input type="checkbox" id="unavail-6-m" /> M</label>
+            <label class="shift-check"><input type="checkbox" id="unavail-6-e" /> E</label>
+          </div>
+        </div>
+      </div>
+      <div class="recommended-input">
+        <label>Recommended Full Shifts:</label>
+        <input type="number" id="recommended-shifts" min="0" step="0.5" placeholder="4" />
+      </div>
+    </div>
     <button class="close-btn" id="defaults-close">Close</button>
+  </div>
+</div>
+
+<div id="week-modal">
+  <div class="dialog">
+    <div class="dialog-title" id="week-title">Manage Weekly Rota</div>
+    <div id="week-content"></div>
+    <button class="close-btn" id="week-close">Close</button>
+  </div>
+</div>
+
+<div id="closing-modal">
+  <div class="dialog">
+    <div class="dialog-title">Set Closing Times</div>
+    <div class="days-grid">
+      <div class="day-input">
+        <div class="day-label">MON</div>
+        <input type="time" id="close-0" />
+      </div>
+      <div class="day-input">
+        <div class="day-label">TUE</div>
+        <input type="time" id="close-1" />
+      </div>
+      <div class="day-input">
+        <div class="day-label">WED</div>
+        <input type="time" id="close-2" />
+      </div>
+      <div class="day-input">
+        <div class="day-label">THU</div>
+        <input type="time" id="close-3" />
+      </div>
+      <div class="day-input">
+        <div class="day-label">FRI</div>
+        <input type="time" id="close-4" />
+      </div>
+      <div class="day-input">
+        <div class="day-label">SAT</div>
+        <input type="time" id="close-5" />
+      </div>
+      <div class="day-input">
+        <div class="day-label">SUN</div>
+        <input type="time" id="close-6" />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="save-btn" id="closing-save">Save</button>
+      <button class="exit-btn" id="closing-exit">Exit</button>
+    </div>
   </div>
 </div>
 
@@ -711,25 +1145,40 @@ const DEFAULT_PEOPLE = [
   'Alix Murton', 'Brooke Messrutner', 'David Zocchi', 'Donna Coe', 'Donna Ball',
   'Ellie Hollis', 'Evie Hollis', 'Gail Harris', 'Jay Tyler', 'Jayden Wilks',
   'Jesse Fisk', 'Julie Waller', 'Kadie Hollingsworth', 'Karen Pickering', 'Kim Carter',
-  'Lorraine Butcher', 'Melissa Burton', 'Nicola Willis', 'Pauline Cheetham',
+  'Lorraine Butcher', 'Melissa Burton', 'Nicola Willis', 'Open Shift', 'Pauline Cheetham',
   'Ruby Bright', 'Shauna Hill'
 ];
 
-function hoursFor(shift, dayIdx) {
-  const longDay = (dayIdx === 4 || dayIdx === 5);
-  if (shift === 'morning') return 5;
-  if (shift === 'evening') return longDay ? 5 : 4;
-  if (shift === 'allday')  return longDay ? 10 : 9;
+function hoursFor(shift, dayIdx, roleIdx) {
+  const closingTimes = state.closingTimes || [19, 19, 19, 19, 20, 20, 19]; // Mon-Sun
+  const closingHour = closingTimes[dayIdx];
+
+  // Kitchen (4) & Fryer (0) start at 9:30am, others at 10am
+  const isEarlyStart = (roleIdx === 0 || roleIdx === 4);
+  const startHour = isEarlyStart ? 9.5 : 10;
+
+  const transitionHour = 16; // 4pm
+
+  if (shift === 'morning') {
+    return transitionHour - startHour;
+  }
+  if (shift === 'evening') {
+    return closingHour - transitionHour;
+  }
+  if (shift === 'allday') {
+    return closingHour - startHour;
+  }
   return 0;
 }
 
-let state = { people: [], assignments: [] };
+let state = { people: [], assignments: [], closingTimes: [19, 19, 19, 19, 20, 20, 19] }; // Mon-Sun defaults
 
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (s && Array.isArray(s.people) && Array.isArray(s.assignments)) {
       state = s;
+      if (!state.closingTimes) state.closingTimes = [19, 19, 19, 19, 20, 20, 19];
       ensureDefaultPeople();
     } else {
       initDefaultPeople();
@@ -774,7 +1223,7 @@ function statsFor(personId) {
     if (a.shift === 'morning') morning++;
     else if (a.shift === 'evening') evening++;
     else if (a.shift === 'allday')  allday++;
-    hours += hoursFor(a.shift, a.day);
+    hours += hoursFor(a.shift, a.day, a.role);
   }
   const shifts = allday + 0.5 * (morning + evening);
   return { morning, evening, allday, hours, shifts };
@@ -783,6 +1232,7 @@ function statsFor(personId) {
 let sortMode = 'name';
 
 let isDragging = false;
+let isRemoveMode = false;
 
 function renderPeople() {
   const el = document.getElementById('people');
@@ -801,10 +1251,13 @@ function renderPeople() {
     const s = statsFor(p.id);
     const div = document.createElement('div');
     div.className = 'person';
+    if (isRemoveMode) div.classList.add('remove-mode');
     div.dataset.personId = p.id;
+
+    const nameClass = p.name === 'Open Shift' ? 'name open-shift' : 'name';
     div.innerHTML = `
       <button class="del" title="Remove" aria-label="Remove person">&times;</button>
-      <div class="name">${escapeHtml(p.name)}</div>
+      <div class="${nameClass}">${escapeHtml(p.name)}</div>
       <div class="shifts-total">${s.shifts.toFixed(1)} Shifts</div>
       <div class="breakdown">AD: ${s.allday} / M: ${s.morning} / E: ${s.evening}</div>
       <div class="hours">${s.hours} Hours</div>
@@ -814,11 +1267,15 @@ function renderPeople() {
       if (confirm(`Remove ${p.name}?`)) removePerson(p.id);
     });
     div.addEventListener('click', (e) => {
-      if (!isDragging && !e.target.closest('.del')) {
+      if (isRemoveMode) {
+        if (confirm(`Remove ${p.name}?`)) removePerson(p.id);
+      } else if (!isDragging && !e.target.closest('.del')) {
         openDefaultsModal(p);
       }
     });
-    attachDrag(div, p);
+    if (!isRemoveMode) {
+      attachDrag(div, p);
+    }
     el.appendChild(div);
   }
 }
@@ -872,6 +1329,18 @@ function renderCell(cell, day, role) {
       const m = document.createElement('div');
       m.className = 'mini ' + a.shift;
       if (a.subType) m.classList.add('sub-' + a.subType);
+      if (person.name === 'Open Shift') m.classList.add('open-shift');
+
+      // Check for conflicts (unavailable shifts)
+      const unavailable = person.unavailable || [];
+      const dayUnavail = unavailable[day] || { morning: false, evening: false };
+      const isConflict = (a.shift === 'morning' && dayUnavail.morning) ||
+                         (a.shift === 'evening' && dayUnavail.evening) ||
+                         (a.shift === 'allday' && (dayUnavail.morning || dayUnavail.evening));
+      if (isConflict) {
+        m.classList.add('conflict');
+      }
+
       m.dataset.assignmentId = a.id;
       m.dataset.position = i;
 
@@ -1138,11 +1607,6 @@ document.addEventListener('pointerdown', (e) => {
 
 const modal = document.getElementById('name-modal');
 const input = document.getElementById('name-input');
-document.getElementById('add-btn').addEventListener('click', () => {
-  input.value = '';
-  modal.classList.add('show');
-  setTimeout(() => input.focus(), 30);
-});
 document.getElementById('name-cancel').addEventListener('click', () => modal.classList.remove('show'));
 document.getElementById('name-ok').addEventListener('click', submitName);
 input.addEventListener('keydown', (e) => {
@@ -1164,39 +1628,13 @@ document.getElementById('clear-all').addEventListener('click', () => {
   save(); renderPeople(); renderGrid();
 });
 
-// Save/Load functionality
+// Save/Load functionality (now for weekly rotas)
 document.getElementById('save-btn').addEventListener('click', () => {
-  const saveData = btoa(JSON.stringify(state));
-  document.getElementById('save-data').value = saveData;
-  document.getElementById('save-modal').classList.add('show');
-});
-
-document.getElementById('copy-btn').addEventListener('click', () => {
-  const textarea = document.getElementById('save-data');
-  textarea.select();
-  document.execCommand('copy');
-  alert('Copied to clipboard! Share this code to load on another device.');
-});
-
-document.getElementById('save-close').addEventListener('click', () => {
-  document.getElementById('save-modal').classList.remove('show');
+  openWeekModal('save');
 });
 
 document.getElementById('load-btn').addEventListener('click', () => {
-  const code = prompt('Paste your save code:');
-  if (!code) return;
-  try {
-    const loaded = JSON.parse(atob(code));
-    if (loaded && Array.isArray(loaded.people) && Array.isArray(loaded.assignments)) {
-      state = loaded;
-      save(); renderPeople(); renderGrid();
-      alert('Loaded successfully!');
-    } else {
-      alert('Invalid save code.');
-    }
-  } catch (e) {
-    alert('Error loading save code.');
-  }
+  openWeekModal('load');
 });
 
 // Download image functionality
@@ -1204,6 +1642,12 @@ document.getElementById('download-btn').addEventListener('click', async () => {
   const peopleDiv = document.getElementById('people');
   const summaryDiv = document.getElementById('text-summary');
   const legendDiv = document.getElementById('legend');
+
+  // Elements to hide during screenshot
+  const menuContainer = document.querySelector('.menu-container');
+  const sortSelect = document.getElementById('sort-select');
+  const actionButtons = document.querySelector('.action-buttons');
+  const toggleViewBtn = document.getElementById('toggle-view');
 
   // Generate text summary
   summaryDiv.innerHTML = '';
@@ -1217,14 +1661,17 @@ document.getElementById('download-btn').addEventListener('click', async () => {
     if (s.morning > 0) breakdown.push(`${s.morning} Morning`);
     if (s.evening > 0) breakdown.push(`${s.evening} Evening`);
     const breakdownText = breakdown.length > 0 ? ` (${breakdown.join(', ')})` : '';
-    item.innerHTML = `<span class="summary-name">${escapeHtml(p.name)}:</span><span class="summary-stats">${s.shifts.toFixed(1)} Shifts${breakdownText} - ${s.hours} Hours</span>`;
+    item.innerHTML = `<span class="summary-name">${escapeHtml(p.name)}</span><span class="summary-stats">${s.shifts.toFixed(1)} Shifts${breakdownText} - ${s.hours} Hours</span>`;
     summaryDiv.appendChild(item);
   }
 
-  // Switch to text view
+  // Switch to text view and hide UI elements
   peopleDiv.style.display = 'none';
-  legendDiv.style.display = 'none';
   summaryDiv.classList.add('show');
+  menuContainer.style.display = 'none';
+  sortSelect.style.display = 'none';
+  actionButtons.style.display = 'none';
+  toggleViewBtn.style.display = 'none';
 
   // Wait for render
   await new Promise(r => setTimeout(r, 100));
@@ -1250,6 +1697,10 @@ document.getElementById('download-btn').addEventListener('click', async () => {
   peopleDiv.style.display = '';
   legendDiv.style.display = '';
   summaryDiv.classList.remove('show');
+  menuContainer.style.display = '';
+  sortSelect.style.display = '';
+  actionButtons.style.display = '';
+  toggleViewBtn.style.display = '';
 });
 
 document.getElementById('toggle-view').addEventListener('click', () => {
@@ -1269,12 +1720,107 @@ document.getElementById('sort-select').addEventListener('change', (e) => {
   renderPeople();
 });
 
-// Defaults modal
+// Menu dropdown
+document.getElementById('menu-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const dropdown = document.getElementById('menu-dropdown');
+  dropdown.classList.toggle('show');
+
+  // Update remove mode indicator
+  const removeItem = document.getElementById('menu-remove');
+  if (isRemoveMode) {
+    removeItem.classList.add('remove-mode-active');
+    removeItem.textContent = '✓ Remove Staff';
+  } else {
+    removeItem.classList.remove('remove-mode-active');
+    removeItem.textContent = 'Remove Staff';
+  }
+});
+
+document.getElementById('menu-add').addEventListener('click', () => {
+  document.getElementById('menu-dropdown').classList.remove('show');
+  input.value = '';
+  modal.classList.add('show');
+  setTimeout(() => input.focus(), 30);
+});
+
+document.getElementById('menu-remove').addEventListener('click', () => {
+  isRemoveMode = !isRemoveMode;
+  document.getElementById('menu-dropdown').classList.remove('show');
+  renderPeople();
+});
+
+document.getElementById('menu-closing').addEventListener('click', () => {
+  document.getElementById('menu-dropdown').classList.remove('show');
+  openClosingModal();
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('menu-dropdown');
+  const btn = document.getElementById('menu-btn');
+  if (!dropdown.contains(e.target) && e.target !== btn) {
+    dropdown.classList.remove('show');
+  }
+});
+
+// Week calculation helpers
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return { year: d.getUTCFullYear(), week: weekNo };
+}
+
+function getWeekDates(year, week) {
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const dayOfWeek = jan4.getUTCDay() || 7;
+  const weekStart = new Date(jan4);
+  weekStart.setUTCDate(jan4.getUTCDate() - dayOfWeek + 1 + (week - 1) * 7);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
+  return { start: weekStart, end: weekEnd };
+}
+
+function formatDate(date) {
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function generateWeekOptions(currentYear, currentWeek) {
+  const options = [];
+  for (let w = 1; w <= 52; w++) {
+    const dates = getWeekDates(currentYear, w);
+    const weekKey = `${currentYear}-W${String(w).padStart(2, '0')}`;
+    const label = `Week ${w} (${formatDate(dates.start)} - ${formatDate(dates.end)})`;
+    options.push({ key: weekKey, label, selected: w === currentWeek });
+  }
+  return options;
+}
+
+// Person defaults modal (simple)
 let currentDefaultsPerson = null;
 
 function openDefaultsModal(person) {
   currentDefaultsPerson = person;
   document.getElementById('defaults-title').textContent = `${person.name} - Defaults`;
+
+  // Load unavailable shifts (array of 7 objects with morning/evening flags)
+  const unavailable = person.unavailable || [];
+  for (let i = 0; i < 7; i++) {
+    const dayUnavail = unavailable[i] || { morning: false, evening: false };
+    document.getElementById(`unavail-${i}-m`).checked = dayUnavail.morning || false;
+    document.getElementById(`unavail-${i}-e`).checked = dayUnavail.evening || false;
+  }
+
+  // Load recommended shifts
+  document.getElementById('recommended-shifts').value = person.recommendedShifts || '';
+
   document.getElementById('defaults-modal').classList.add('show');
 }
 
@@ -1310,10 +1856,8 @@ document.getElementById('load-defaults-btn').addEventListener('click', () => {
     return;
   }
 
-  // Remove current assignments for this person
   state.assignments = state.assignments.filter(a => a.personId !== person.id);
 
-  // Add defaults
   for (const def of person.defaults) {
     state.assignments.push({
       id: uid(),
@@ -1333,7 +1877,151 @@ document.getElementById('load-defaults-btn').addEventListener('click', () => {
   closeDefaultsModal();
 });
 
-document.getElementById('defaults-close').addEventListener('click', closeDefaultsModal);
+document.getElementById('defaults-close').addEventListener('click', () => {
+  // Save unavailable shifts and recommended shifts before closing
+  if (currentDefaultsPerson) {
+    const person = state.people.find(p => p.id === currentDefaultsPerson.id);
+    if (person) {
+      // Save unavailable shifts (array of 7 objects)
+      const unavailable = [];
+      for (let i = 0; i < 7; i++) {
+        unavailable[i] = {
+          morning: document.getElementById(`unavail-${i}-m`).checked,
+          evening: document.getElementById(`unavail-${i}-e`).checked
+        };
+      }
+      person.unavailable = unavailable;
+
+      // Save recommended shifts
+      const recommended = parseFloat(document.getElementById('recommended-shifts').value);
+      person.recommendedShifts = isNaN(recommended) ? 0 : recommended;
+
+      save();
+      renderGrid(); // Refresh to show conflicts
+    }
+  }
+  closeDefaultsModal();
+});
+
+// Weekly rota save/load
+function openWeekModal(mode) {
+  const { year, week } = getWeekNumber(new Date());
+  const content = document.getElementById('week-content');
+
+  if (mode === 'save') {
+    const weeks = generateWeekOptions(year, week);
+    content.innerHTML = `
+      <label>Select week to save entire rota to:</label>
+      <select id="week-select">
+        ${weeks.map(w => `<option value="${w.key}" ${w.selected ? 'selected' : ''}>${w.label}</option>`).join('')}
+      </select>
+      <button class="action-btn" id="confirm-week-action">Save Week</button>
+    `;
+    document.getElementById('confirm-week-action').addEventListener('click', saveWeek);
+  } else {
+    if (!state.weeklyRotas || Object.keys(state.weeklyRotas).length === 0) {
+      alert('No saved weeks available');
+      return;
+    }
+
+    const savedWeeks = Object.keys(state.weeklyRotas).sort();
+    const options = savedWeeks.map(weekKey => {
+      const match = weekKey.match(/(\d+)-W(\d+)/);
+      if (!match) return null;
+      const year = parseInt(match[1]);
+      const weekNum = parseInt(match[2]);
+      const dates = getWeekDates(year, weekNum);
+      const label = `Week ${weekNum} (${formatDate(dates.start)} - ${formatDate(dates.end)})`;
+      return { key: weekKey, label };
+    }).filter(Boolean);
+
+    content.innerHTML = `
+      <label>Select week to load entire rota from:</label>
+      <select id="week-select">
+        ${options.map(w => `<option value="${w.key}">${w.label}</option>`).join('')}
+      </select>
+      <button class="action-btn" id="confirm-week-action">Load Week</button>
+    `;
+    document.getElementById('confirm-week-action').addEventListener('click', loadWeek);
+  }
+
+  document.getElementById('week-modal').classList.add('show');
+}
+
+function closeWeekModal() {
+  document.getElementById('week-modal').classList.remove('show');
+}
+
+function saveWeek() {
+  const select = document.getElementById('week-select');
+  const weekKey = select.value;
+
+  if (!state.weeklyRotas) state.weeklyRotas = {};
+  state.weeklyRotas[weekKey] = JSON.parse(JSON.stringify(state.assignments));
+
+  save();
+  alert(`Saved entire rota to ${select.options[select.selectedIndex].text}`);
+  closeWeekModal();
+}
+
+function loadWeek() {
+  const select = document.getElementById('week-select');
+  const weekKey = select.value;
+
+  if (!state.weeklyRotas || !state.weeklyRotas[weekKey]) {
+    alert('No data for selected week');
+    return;
+  }
+
+  state.assignments = JSON.parse(JSON.stringify(state.weeklyRotas[weekKey]));
+
+  save();
+  renderGrid();
+  renderPeople();
+  alert(`Loaded rota from ${select.options[select.selectedIndex].text}`);
+  closeWeekModal();
+}
+
+document.getElementById('week-close').addEventListener('click', closeWeekModal);
+
+// Closing times modal
+function hoursToTime(hours) {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function timeToHours(timeStr) {
+  if (!timeStr) return 19;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h + (m / 60);
+}
+
+function openClosingModal() {
+  const closingTimes = state.closingTimes || [19, 19, 19, 19, 20, 20, 19];
+  for (let i = 0; i < 7; i++) {
+    document.getElementById(`close-${i}`).value = hoursToTime(closingTimes[i]);
+  }
+  document.getElementById('closing-modal').classList.add('show');
+}
+
+function closeClosingModal() {
+  document.getElementById('closing-modal').classList.remove('show');
+}
+
+document.getElementById('closing-save').addEventListener('click', () => {
+  const closingTimes = [];
+  for (let i = 0; i < 7; i++) {
+    closingTimes[i] = timeToHours(document.getElementById(`close-${i}`).value);
+  }
+  state.closingTimes = closingTimes;
+  save();
+  renderPeople(); // Refresh hours
+  alert('Closing times saved!');
+  closeClosingModal();
+});
+
+document.getElementById('closing-exit').addEventListener('click', closeClosingModal);
 
 load();
 renderGrid();
