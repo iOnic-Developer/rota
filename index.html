@@ -762,6 +762,21 @@
     width: 4em;
     text-align: center;
   }
+  #defaults-modal .roles-checks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4em;
+    margin-top: 0.5em;
+  }
+  #defaults-modal .role-check {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: 0.85em;
+  }
+  #defaults-modal .role-check input[type="checkbox"] {
+    cursor: pointer;
+  }
 
   /* Week modal */
   #week-modal {
@@ -1079,6 +1094,17 @@
         <input type="number" id="recommended-shifts" min="0" step="0.5" placeholder="4" />
       </div>
     </div>
+    <div class="section">
+      <div class="section-title">Exclude From</div>
+      <div class="roles-checks">
+        <label class="role-check"><input type="checkbox" id="exclude-0" /> Fryer</label>
+        <label class="role-check"><input type="checkbox" id="exclude-1" /> Takeaway</label>
+        <label class="role-check"><input type="checkbox" id="exclude-2" /> Restaurant</label>
+        <label class="role-check"><input type="checkbox" id="exclude-3" /> Extra</label>
+        <label class="role-check"><input type="checkbox" id="exclude-4" /> Kitchen</label>
+        <label class="role-check"><input type="checkbox" id="exclude-5" /> New Side</label>
+      </div>
+    </div>
     <button class="close-btn" id="defaults-close">Close</button>
   </div>
 </div>
@@ -1331,13 +1357,17 @@ function renderCell(cell, day, role) {
       if (a.subType) m.classList.add('sub-' + a.subType);
       if (person.name === 'Open Shift') m.classList.add('open-shift');
 
-      // Check for conflicts (unavailable shifts)
+      // Check for conflicts (unavailable shifts or excluded roles)
       const unavailable = person.unavailable || [];
       const dayUnavail = unavailable[day] || { morning: false, evening: false };
-      const isConflict = (a.shift === 'morning' && dayUnavail.morning) ||
-                         (a.shift === 'evening' && dayUnavail.evening) ||
-                         (a.shift === 'allday' && (dayUnavail.morning || dayUnavail.evening));
-      if (isConflict) {
+      const shiftConflict = (a.shift === 'morning' && dayUnavail.morning) ||
+                            (a.shift === 'evening' && dayUnavail.evening) ||
+                            (a.shift === 'allday' && (dayUnavail.morning || dayUnavail.evening));
+
+      const excludedRoles = person.excludedRoles || [];
+      const roleConflict = excludedRoles.includes(role);
+
+      if (shiftConflict || roleConflict) {
         m.classList.add('conflict');
       }
 
@@ -1821,6 +1851,12 @@ function openDefaultsModal(person) {
   // Load recommended shifts
   document.getElementById('recommended-shifts').value = person.recommendedShifts || '';
 
+  // Load excluded roles
+  const excludedRoles = person.excludedRoles || [];
+  for (let i = 0; i < 6; i++) {
+    document.getElementById(`exclude-${i}`).checked = excludedRoles.includes(i);
+  }
+
   document.getElementById('defaults-modal').classList.add('show');
 }
 
@@ -1878,7 +1914,7 @@ document.getElementById('load-defaults-btn').addEventListener('click', () => {
 });
 
 document.getElementById('defaults-close').addEventListener('click', () => {
-  // Save unavailable shifts and recommended shifts before closing
+  // Save unavailable shifts, excluded roles, and recommended shifts before closing
   if (currentDefaultsPerson) {
     const person = state.people.find(p => p.id === currentDefaultsPerson.id);
     if (person) {
@@ -1891,6 +1927,15 @@ document.getElementById('defaults-close').addEventListener('click', () => {
         };
       }
       person.unavailable = unavailable;
+
+      // Save excluded roles
+      const excludedRoles = [];
+      for (let i = 0; i < 6; i++) {
+        if (document.getElementById(`exclude-${i}`).checked) {
+          excludedRoles.push(i);
+        }
+      }
+      person.excludedRoles = excludedRoles;
 
       // Save recommended shifts
       const recommended = parseFloat(document.getElementById('recommended-shifts').value);
