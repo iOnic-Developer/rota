@@ -19,6 +19,10 @@
     --evening: #7a5bd9;
     --allday: #3ec28f;
     --danger: #e5484d;
+    --sub-early: #6b6b2d;
+    --sub-covering: #8b5a3c;
+    --sub-unfilled: #a83232;
+    --sub-alternating: #3d5a80;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -50,8 +54,19 @@
     padding: 0.5em 0.6em;
     border-bottom: 1px solid var(--border);
     gap: 0.4em;
+    flex-wrap: wrap;
   }
   #left header h1 { margin: 0; font-size: 1.1em; font-weight: 600; letter-spacing: 0.02em; }
+  #sort-select {
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.3em 0.5em;
+    border-radius: 0.3em;
+    font-size: 0.8em;
+    cursor: pointer;
+    outline: none;
+  }
+  #sort-select:focus { border-color: var(--accent); }
   .icon-btn {
     background: var(--accent); color: white;
     border: none; border-radius: 50%;
@@ -80,9 +95,43 @@
   .toggle-view-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
   #app.view-only .toggle-view-btn { left: 0.6em; right: auto; }
 
+  .action-buttons {
+    display: flex; gap: 0.4em; padding: 0.5em 0.6em;
+    border-top: 1px solid var(--border);
+  }
+  .action-btn {
+    flex: 1;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-align: center;
+  }
+  .action-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+
+  #text-summary {
+    display: none;
+    padding: 0.6em;
+    overflow-y: auto;
+    font-size: 0.85em;
+    line-height: 1.5;
+  }
+  #text-summary.show { display: block; }
+  #text-summary .summary-item {
+    margin-bottom: 0.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid var(--border);
+  }
+  #text-summary .summary-item:last-child { border-bottom: none; }
+  #text-summary .summary-name { font-weight: 600; color: var(--accent); }
+  #text-summary .summary-stats { color: var(--muted); font-size: 0.95em; margin-left: 0.5em; }
+
   #people {
     flex: 1; min-height: 0;
-    display: grid; grid-template-columns: 1fr;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
     gap: 0.4em; padding: 0.4em;
     overflow-y: auto;
     align-content: start;
@@ -91,8 +140,8 @@
     background: var(--panel-2);
     border: 1px solid var(--border);
     border-radius: 0.4em;
-    padding: 0.45em 0.5em 0.4em;
-    display: flex; flex-direction: column; gap: 0.1em;
+    padding: 0.4em 0.5em;
+    display: flex; flex-direction: column; gap: 0.15em;
     cursor: grab;
     position: relative;
     touch-action: none;
@@ -101,44 +150,109 @@
   .person:active { cursor: grabbing; }
   .person.dragging { opacity: 0.35; }
   .person .name {
-    font-weight: 600; font-size: 0.95em;
+    font-weight: 600; font-size: 0.9em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     padding-right: 1em;
+    text-align: left;
   }
-  .person .sep { border-top: 1px dashed var(--border); margin: 0.25em 0; }
-  .person .row { font-size: 0.8em; color: var(--muted); line-height: 1.3; }
-  .person .row strong { color: var(--text); font-weight: 600; }
-  .person .shifts-total { font-size: 0.88em; }
-  .person .shifts-total strong { color: var(--accent); }
+  .person .shifts-total {
+    font-size: 0.85em;
+    text-align: right;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .person .breakdown {
+    font-size: 0.75em;
+    color: var(--muted);
+    text-align: right;
+  }
+  .person .hours {
+    font-size: 0.8em;
+    color: var(--text);
+    text-align: right;
+    font-weight: 500;
+  }
   .person .del {
     position: absolute; top: 0.2em; right: 0.25em;
     background: transparent; border: none; color: var(--muted);
-    font-size: 0.95em; cursor: pointer; line-height: 1;
+    font-size: 0.9em; cursor: pointer; line-height: 1;
     padding: 0.1em 0.3em;
   }
   .person .del:hover { color: var(--danger); }
 
   #legend {
-    padding: 0.5em 0.6em;
+    padding: 0.6em 0.7em;
     border-top: 1px solid var(--border);
-    font-size: 0.75em;
+    font-size: 0.85em;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+  }
+  #legend .section {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    padding: 0.5em;
+  }
+  #legend .section-title {
+    font-weight: 600;
+    margin-bottom: 0.4em;
+    color: var(--text);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+  }
+  #legend .shifts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5em;
+  }
+  #legend .shift-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3em;
+    text-align: center;
+  }
+  #legend .shift-col .shift-label {
+    font-weight: 500;
+    color: var(--text);
+  }
+  #legend .shift-col .shift-time {
+    font-size: 0.85em;
     color: var(--muted);
   }
-  #legend .title { font-weight: 600; margin-bottom: 0.4em; color: var(--text); }
-  #legend .item {
-    display: flex; align-items: center; gap: 0.4em; margin-bottom: 0.25em;
-    line-height: 1.3;
+  #legend .subtypes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5em;
+    align-items: center;
+  }
+  #legend .subtype-item {
+    display: flex; align-items: center; gap: 0.5em;
+    white-space: nowrap;
   }
   #legend .badge {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 1.6em; height: 1.6em;
-    border-radius: 0.2em;
+    width: 1.8em; height: 1.8em;
+    border-radius: 0.25em;
     font-weight: 700; font-size: 0.9em;
     flex-shrink: 0;
   }
   #legend .badge.m { background: var(--morning); color: #1a1410; }
-  #legend .badge.e { background: var(--evening); color: white; }
+  #legend .badge.e { background: var(--evening); color: #1a0f28; }
   #legend .badge.ad { background: var(--allday); color: #0a1410; }
+  #legend .color-square {
+    width: 1.2em; height: 1.2em;
+    border-radius: 0.2em;
+    flex-shrink: 0;
+  }
+  #legend .sq-early { background: var(--sub-early); }
+  #legend .sq-covering { background: var(--sub-covering); }
+  #legend .sq-unfilled { background: var(--sub-unfilled); }
+  #legend .sq-alternating { background: var(--sub-alternating); }
 
   #clear-all {
     padding: 0.4em 0.6em;
@@ -153,7 +267,7 @@
     flex: 1; min-width: 0;
     display: grid;
     grid-template-columns: auto repeat(7, 1fr);
-    grid-template-rows: auto repeat(5, 1fr);
+    grid-template-rows: auto repeat(6, 1fr);
     gap: 2px;
     background: var(--border);
     padding: 2px;
@@ -190,45 +304,99 @@
   .slot {
     border: 1px dashed #2a3038;
     border-radius: 0.25em;
+    position: relative;
   }
+  .slot.drop-target { background: rgba(79, 140, 255, 0.1); border-color: var(--accent); }
   .mini {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 0.3em;
-    padding: 0.3em 0.4em;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     cursor: grab;
-    font-size: 0.85em;
     min-width: 0;
+    min-height: 0;
     touch-action: none;
     transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
   }
-  .mini:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  .mini:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
   .mini:active { cursor: grabbing; }
   .mini.dragging { opacity: 0.35; }
+
   .mini .m-name {
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    flex: 1; min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2em 0.3em;
+    font-weight: 600;
+    font-size: 0.85em;
+    text-align: center;
+    overflow: hidden;
+    line-height: 1.1;
+    gap: 0.1em;
+  }
+
+  .mini .m-first,
+  .mini .m-last {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  .mini .m-last {
     font-weight: 500;
+    opacity: 0.85;
   }
-  .mini .m-badge {
-    font-size: 0.7em; font-weight: 700;
-    padding: 0.2em 0.35em;
-    margin-left: 0.35em;
-    flex-shrink: 0;
-    border-radius: 0.2em;
+
+  .mini .m-badge-strip {
+    flex: 0 0 1.6em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75em;
+    letter-spacing: 0.05em;
+    position: relative;
+    overflow: hidden;
   }
-  .mini.morning { border-left: 3px solid var(--morning); }
-  .mini.morning .m-badge { background: var(--morning); color: #1a1410; }
-  .mini.evening { border-left: 3px solid var(--evening); }
-  .mini.evening .m-badge { background: var(--evening); color: white; }
+
+  .mini.morning .m-badge-strip {
+    background: var(--morning);
+    color: #1a1410;
+  }
+  .mini.evening .m-badge-strip {
+    background: var(--evening);
+    color: #1a0f28;
+  }
   .mini.allday {
+    grid-row: span 2;
+  }
+  .mini.allday .m-badge-strip {
     background: var(--allday);
-    border-color: var(--allday);
     color: #0a1410;
   }
-  .mini.allday .m-badge { background: rgba(0,0,0,0.15); color: #0a1410; }
+
+  /* Diagonal sub-type indicator */
+  .mini .m-badge-strip::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30%;
+    clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+    pointer-events: none;
+  }
+
+  .mini.sub-early .m-badge-strip::after { background: var(--sub-early); }
+  .mini.sub-covering .m-badge-strip::after { background: var(--sub-covering); }
+  .mini.sub-unfilled .m-badge-strip::after { background: var(--sub-unfilled); }
+  .mini.sub-alternating .m-badge-strip::after { background: var(--sub-alternating); }
 
   /* Drag ghost */
   #drag-ghost {
@@ -252,12 +420,30 @@
     background: var(--panel-2);
     border: 1px solid var(--border);
     border-radius: 0.5em;
-    padding: 0.4em;
+    padding: 0.6em;
     box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     display: none;
-    gap: 0.3em;
+    flex-direction: column;
+    gap: 0.5em;
+    min-width: 12em;
   }
   #popover.show { display: flex; }
+  #popover .pop-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+  }
+  #popover .pop-label {
+    font-size: 0.75em;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #popover .pop-buttons {
+    display: flex;
+    gap: 0.3em;
+  }
   #popover button {
     background: var(--panel);
     color: var(--text);
@@ -265,10 +451,18 @@
     padding: 0.5em 0.8em;
     border-radius: 0.3em;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.85em;
     font-weight: 500;
+    flex: 1;
   }
   #popover button:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #popover button.selected { background: var(--accent); color: white; border-color: var(--accent); }
+  #popover .pop-confirm {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    margin-top: 0.3em;
+  }
 
   /* Name modal */
   #name-modal {
@@ -307,6 +501,47 @@
   #name-modal button.primary {
     background: var(--accent); border-color: var(--accent); color: white;
   }
+
+  /* Save/Load modal */
+  #save-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1200;
+  }
+  #save-modal.show { display: flex; }
+  #save-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1em 1.1em;
+    min-width: 20em;
+    max-width: 90vw;
+    display: flex; flex-direction: column; gap: 0.6em;
+  }
+  #save-modal textarea {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    padding: 0.5em 0.6em;
+    font-size: 0.85em;
+    font-family: monospace;
+    resize: vertical;
+    min-height: 8em;
+    outline: none;
+  }
+  #save-modal textarea:focus { border-color: var(--accent); }
+  #save-modal .btn-row { display: flex; gap: 0.5em; justify-content: flex-end; }
+  #save-modal button {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.45em 0.9em; border-radius: 0.3em;
+    cursor: pointer; font-size: 0.9em;
+  }
+  #save-modal button.primary {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
 </style>
 </head>
 <body>
@@ -315,16 +550,52 @@
   <aside id="left">
     <header>
       <h1>Rota</h1>
+      <select id="sort-select">
+        <option value="name">Sort: Name</option>
+        <option value="shifts">Sort: Shifts</option>
+        <option value="hours">Sort: Hours</option>
+      </select>
       <button class="icon-btn" id="add-btn" title="Add person" aria-label="Add person">+</button>
     </header>
     <div id="people"></div>
+    <div id="text-summary"></div>
     <div id="legend">
-      <div class="title">Shift Times</div>
-      <div class="item"><span class="badge m">M</span> Morning (5hrs)</div>
-      <div class="item"><span class="badge e">E</span> Evening (4-5hrs)</div>
-      <div class="item"><span class="badge ad">AD</span> All Day (9-10hrs)</div>
+      <div class="section">
+        <div class="section-title">Shift Types</div>
+        <div class="shifts-row">
+          <div class="shift-col">
+            <span class="badge m">M</span>
+            <span class="shift-label">Morning</span>
+            <span class="shift-time">Start - 16:00</span>
+          </div>
+          <div class="shift-col">
+            <span class="badge e">E</span>
+            <span class="shift-label">Evening</span>
+            <span class="shift-time">16:00 - Close</span>
+          </div>
+          <div class="shift-col">
+            <span class="badge ad">AD</span>
+            <span class="shift-label">All Day</span>
+            <span class="shift-time">Start - Close</span>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Modifiers</div>
+        <div class="subtypes-grid">
+          <div class="subtype-item"><span class="color-square sq-early"></span> May leave early</div>
+          <div class="subtype-item"><span class="color-square sq-covering"></span> Covering</div>
+          <div class="subtype-item"><span class="color-square sq-unfilled"></span> Unfilled Shift</div>
+          <div class="subtype-item"><span class="color-square sq-alternating"></span> Alternating</div>
+        </div>
+      </div>
     </div>
-    <div id="clear-all">Clear all</div>
+    <div class="action-buttons">
+      <button class="action-btn" id="save-btn">Save</button>
+      <button class="action-btn" id="load-btn">Load</button>
+      <button class="action-btn" id="download-btn">Download</button>
+    </div>
+    <div id="clear-all">Clear all assignments</div>
   </aside>
   <main id="right"></main>
 </div>
@@ -332,9 +603,24 @@
 <div id="drag-ghost"></div>
 
 <div id="popover">
-  <button data-shift="morning">Morning</button>
-  <button data-shift="evening">Evening</button>
-  <button data-shift="allday">All day</button>
+  <div class="pop-section">
+    <div class="pop-label">Shift Type</div>
+    <div class="pop-buttons">
+      <button data-shift="morning">Morning</button>
+      <button data-shift="evening">Evening</button>
+      <button data-shift="allday">All Day</button>
+    </div>
+  </div>
+  <div class="pop-section">
+    <div class="pop-label">Sub-Type (Optional)</div>
+    <div class="pop-buttons">
+      <button data-subtype="early">Early</button>
+      <button data-subtype="covering">Covering</button>
+      <button data-subtype="unfilled">Unfilled</button>
+      <button data-subtype="alternating">Alt.</button>
+    </div>
+  </div>
+  <button class="pop-confirm" id="pop-confirm">Add</button>
 </div>
 
 <div id="name-modal">
@@ -348,14 +634,34 @@
   </div>
 </div>
 
+<div id="save-modal">
+  <div class="dialog">
+    <label for="save-data">Save code (copy and share):</label>
+    <textarea id="save-data" readonly></textarea>
+    <div class="btn-row">
+      <button id="copy-btn" class="primary">Copy to Clipboard</button>
+      <button id="save-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 (() => {
 'use strict';
 
 const DAYS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const ROLES = ['Fryer','Takeaway','Restaurant','Extra','Kitchen'];
+const ROLES = ['Fryer','Takeaway','Restaurant','Extra','Kitchen','New Side'];
 const CELL_MAX = 6;
 const STORAGE_KEY = 'rota-v1';
+
+const DEFAULT_PEOPLE = [
+  'Alix Murton', 'Brooke Messrutner', 'David Zocchi', 'Donna Coe', 'Donna Ball',
+  'Ellie Hollis', 'Evie Hollis', 'Gail Harris', 'Jay Tyler', 'Jayden Wilks',
+  'Jesse Fisk', 'Julie Waller', 'Kadie Hollingsworth', 'Karen Pickering', 'Kim Carter',
+  'Lorraine Butcher', 'Melissa Burton', 'Nicola Willis', 'Pauline Cheetham',
+  'Ruby Bright', 'Shauna Hill'
+];
 
 function hoursFor(shift, dayIdx) {
   const longDay = (dayIdx === 4 || dayIdx === 5);
@@ -370,8 +676,35 @@ let state = { people: [], assignments: [] };
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (s && Array.isArray(s.people) && Array.isArray(s.assignments)) state = s;
-  } catch (e) {}
+    if (s && Array.isArray(s.people) && Array.isArray(s.assignments)) {
+      state = s;
+      ensureDefaultPeople();
+    } else {
+      initDefaultPeople();
+    }
+  } catch (e) {
+    initDefaultPeople();
+  }
+}
+
+function initDefaultPeople() {
+  state.people = DEFAULT_PEOPLE.map(name => ({ id: uid(), name }));
+  state.assignments = [];
+  save();
+}
+
+function ensureDefaultPeople() {
+  const existingNames = new Set(state.people.map(p => p.name.toLowerCase()));
+  let added = false;
+
+  for (const name of DEFAULT_PEOPLE) {
+    if (!existingNames.has(name.toLowerCase())) {
+      state.people.push({ id: uid(), name });
+      added = true;
+    }
+  }
+
+  if (added) save();
 }
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function uid() { return Math.random().toString(36).slice(2, 10); }
@@ -395,10 +728,22 @@ function statsFor(personId) {
   return { morning, evening, allday, hours, shifts };
 }
 
+let sortMode = 'name';
+
 function renderPeople() {
   const el = document.getElementById('people');
   el.innerHTML = '';
-  for (const p of state.people) {
+
+  let sorted = [...state.people];
+  if (sortMode === 'name') {
+    sorted.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sortMode === 'shifts') {
+    sorted.sort((a, b) => statsFor(b.id).shifts - statsFor(a.id).shifts);
+  } else if (sortMode === 'hours') {
+    sorted.sort((a, b) => statsFor(b.id).hours - statsFor(a.id).hours);
+  }
+
+  for (const p of sorted) {
     const s = statsFor(p.id);
     const div = document.createElement('div');
     div.className = 'person';
@@ -406,13 +751,9 @@ function renderPeople() {
     div.innerHTML = `
       <button class="del" title="Remove" aria-label="Remove person">&times;</button>
       <div class="name">${escapeHtml(p.name)}</div>
-      <div class="shifts-total"><strong>${s.shifts.toFixed(1)}</strong> Shifts</div>
-      <div class="sep"></div>
-      <div class="row"><strong>${s.allday}</strong> all day</div>
-      <div class="row"><strong>${s.morning}</strong> Morning</div>
-      <div class="row"><strong>${s.evening}</strong> Evening</div>
-      <div class="sep"></div>
-      <div class="row"><strong>${s.hours}</strong> Hours</div>
+      <div class="shifts-total">${s.shifts.toFixed(1)} Shifts</div>
+      <div class="breakdown">AD: ${s.allday} / M: ${s.morning} / E: ${s.evening}</div>
+      <div class="hours">${s.hours} Hours</div>
     `;
     div.querySelector('.del').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -453,29 +794,51 @@ function renderGrid() {
 
 function renderCell(cell, day, role) {
   cell.innerHTML = '';
-  const assigns = state.assignments.filter(a => a.day === day && a.role === role);
+  const assigns = state.assignments
+    .filter(a => a.day === day && a.role === role)
+    .sort((a, b) => (a.position || 0) - (b.position || 0));
   const count = assigns.length;
   const slots = count > 4 ? CELL_MAX : 4;
   cell.classList.toggle('overflow', slots === CELL_MAX);
+
+  // Create a map of position -> assignment
+  const positionMap = {};
+  assigns.forEach(a => positionMap[a.position || 0] = a);
+
   for (let i = 0; i < slots; i++) {
-    if (i < count) {
-      const a = assigns[i];
+    const a = positionMap[i];
+    if (a) {
       const person = state.people.find(p => p.id === a.personId);
       if (!person) continue;
       const m = document.createElement('div');
       m.className = 'mini ' + a.shift;
+      if (a.subType) m.classList.add('sub-' + a.subType);
       m.dataset.assignmentId = a.id;
+      m.dataset.position = i;
+
+      const nameParts = person.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
       const badge = a.shift === 'allday' ? 'AD' : (a.shift === 'morning' ? 'M' : 'E');
-      m.innerHTML = `<span class="m-name">${escapeHtml(person.name)}</span><span class="m-badge">${badge}</span>`;
-      m.title = `${person.name} — ${a.shift} (drag to move, click to remove)`;
+
+      m.innerHTML = `
+        <div class="m-name">
+          <div class="m-first">${escapeHtml(firstName)}</div>
+          <div class="m-last">${escapeHtml(lastName)}</div>
+        </div>
+        <div class="m-badge-strip">${badge}</div>
+      `;
+      const subTypeText = a.subType ? ` (${a.subType})` : '';
+      m.title = `${person.name} — ${a.shift}${subTypeText} (drag to move, click to remove)`;
       m.addEventListener('click', (e) => {
         if (!drag) removeAssignment(a.id);
       });
-      attachMiniDrag(m, a, person);
+      attachMiniDrag(m, a, person, day, role);
       cell.appendChild(m);
     } else {
       const slot = document.createElement('div');
       slot.className = 'slot';
+      slot.dataset.position = i;
       cell.appendChild(slot);
     }
   }
@@ -497,12 +860,29 @@ function removePerson(personId) {
   state.assignments = state.assignments.filter(a => a.personId !== personId);
   save(); renderPeople(); renderGrid();
 }
-function addAssignment(personId, day, role, shift) {
-  const count = state.assignments.filter(a => a.day === day && a.role === role).length;
+function addAssignment(personId, day, role, shift, position, subType) {
+  const cellAssignments = state.assignments.filter(a => a.day === day && a.role === role);
+  const count = cellAssignments.length;
   if (count >= CELL_MAX) { shakeCell(day, role); return false; }
-  state.assignments.push({ id: uid(), personId, day, role, shift });
+
+  // If position not specified, auto-assign to first available slot (0-5)
+  if (position === undefined) {
+    const usedPositions = cellAssignments.map(a => a.position || 0);
+    position = 0;
+    for (let i = 0; i < CELL_MAX; i++) {
+      if (!usedPositions.includes(i)) { position = i; break; }
+    }
+  }
+
+  state.assignments.push({ id: uid(), personId, day, role, shift, position, subType });
   save(); rerenderCell(day, role); renderPeople();
   return true;
+}
+function moveAssignment(assignmentId, newPosition) {
+  const a = state.assignments.find(x => x.id === assignmentId);
+  if (!a) return;
+  a.position = newPosition;
+  save(); rerenderCell(a.day, a.role);
 }
 function removeAssignment(aid) {
   const a = state.assignments.find(x => x.id === aid);
@@ -529,15 +909,15 @@ function attachDrag(el, person) {
     startDrag(person, e.clientX, e.clientY, el, null);
   });
 }
-function attachMiniDrag(el, assignment, person) {
+function attachMiniDrag(el, assignment, person, day, role) {
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
-    startDrag(person, e.clientX, e.clientY, el, assignment);
+    startDrag(person, e.clientX, e.clientY, el, assignment, day, role);
   });
 }
-function startDrag(person, x, y, el, assignment) {
-  drag = { person, el, assignment };
+function startDrag(person, x, y, el, assignment, originDay, originRole) {
+  drag = { person, el, assignment, originDay, originRole };
   el.classList.add('dragging');
   ghost.textContent = person.name;
   ghost.style.display = 'block';
@@ -554,8 +934,22 @@ function onDragMove(e) {
   if (!drag) return;
   moveGhost(e.clientX, e.clientY);
   document.querySelectorAll('.cell.drag-over').forEach(c => c.classList.remove('drag-over'));
+  document.querySelectorAll('.slot.drop-target').forEach(s => s.classList.remove('drop-target'));
+
   const target = cellFromPoint(e.clientX, e.clientY);
-  if (target) target.classList.add('drag-over');
+  if (target) {
+    target.classList.add('drag-over');
+
+    // If dragging within same cell, highlight the slot
+    if (drag.assignment && drag.originDay !== undefined) {
+      const targetDay = parseInt(target.dataset.day, 10);
+      const targetRole = parseInt(target.dataset.role, 10);
+      if (targetDay === drag.originDay && targetRole === drag.originRole) {
+        const slot = slotFromPoint(e.clientX, e.clientY, target);
+        if (slot) slot.classList.add('drop-target');
+      }
+    }
+  }
 }
 function onDragEnd(e) {
   if (!drag) return;
@@ -565,18 +959,34 @@ function onDragEnd(e) {
   ghost.style.display = 'none';
   if (drag.el) drag.el.classList.remove('dragging');
   document.querySelectorAll('.cell.drag-over').forEach(c => c.classList.remove('drag-over'));
+  document.querySelectorAll('.slot.drop-target').forEach(s => s.classList.remove('drop-target'));
+
   const target = cellFromPoint(e.clientX, e.clientY);
   const person = drag.person;
   const assignment = drag.assignment;
+  const originDay = drag.originDay;
+  const originRole = drag.originRole;
   drag = null;
+
   if (target) {
     const day  = parseInt(target.dataset.day, 10);
     const role = parseInt(target.dataset.role, 10);
-    if (assignment) {
+
+    if (assignment && originDay !== undefined && originRole !== undefined) {
       // Moving existing assignment
-      if (assignment.day === day && assignment.role === role) return; // Same cell
-      removeAssignment(assignment.id);
-      openPopover(person, day, role, e.clientX, e.clientY);
+      if (day === originDay && role === originRole) {
+        // Same cell - reorder within cell
+        const slot = slotFromPoint(e.clientX, e.clientY, target);
+        if (slot && slot.dataset.position !== undefined) {
+          const newPos = parseInt(slot.dataset.position, 10);
+          moveAssignment(assignment.id, newPos);
+        }
+        return;
+      } else {
+        // Different cell - remove and create new
+        removeAssignment(assignment.id);
+        openPopover(person, day, role, e.clientX, e.clientY);
+      }
     } else {
       // New assignment from person card
       openPopover(person, day, role, e.clientX, e.clientY);
@@ -587,11 +997,24 @@ function cellFromPoint(x, y) {
   const els = document.elementsFromPoint(x, y);
   return els.find(el => el.classList && el.classList.contains('cell'));
 }
+function slotFromPoint(x, y, cell) {
+  const els = document.elementsFromPoint(x, y);
+  return els.find(el => el.classList && el.classList.contains('slot') && cell.contains(el));
+}
 
 const pop = document.getElementById('popover');
 let pending = null;
-function openPopover(person, day, role, x, y) {
-  pending = { personId: person.id, day, role };
+let selectedShift = null;
+let selectedSubType = null;
+
+function openPopover(person, day, role, x, y, position) {
+  pending = { personId: person.id, day, role, position };
+  selectedShift = null;
+  selectedSubType = null;
+
+  // Clear previous selections
+  pop.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+
   pop.classList.add('show');
   pop.style.left = '0px'; pop.style.top = '0px';
   const rect = pop.getBoundingClientRect();
@@ -603,12 +1026,34 @@ function openPopover(person, day, role, x, y) {
 function closePopover() {
   pop.classList.remove('show');
   pending = null;
+  selectedShift = null;
+  selectedSubType = null;
 }
+
 pop.addEventListener('click', (e) => {
   const b = e.target.closest('button');
-  if (!b || !pending) return;
-  addAssignment(pending.personId, pending.day, pending.role, b.dataset.shift);
-  closePopover();
+  if (!b) return;
+
+  if (b.dataset.shift) {
+    // Shift type selection
+    selectedShift = b.dataset.shift;
+    pop.querySelectorAll('[data-shift]').forEach(btn => btn.classList.remove('selected'));
+    b.classList.add('selected');
+  } else if (b.dataset.subtype) {
+    // Sub-type selection (toggle)
+    if (selectedSubType === b.dataset.subtype) {
+      selectedSubType = null;
+      b.classList.remove('selected');
+    } else {
+      selectedSubType = b.dataset.subtype;
+      pop.querySelectorAll('[data-subtype]').forEach(btn => btn.classList.remove('selected'));
+      b.classList.add('selected');
+    }
+  } else if (b.id === 'pop-confirm' && pending && selectedShift) {
+    // Confirm button
+    addAssignment(pending.personId, pending.day, pending.role, selectedShift, pending.position, selectedSubType);
+    closePopover();
+  }
 });
 document.addEventListener('pointerdown', (e) => {
   if (pop.classList.contains('show') && !pop.contains(e.target)) closePopover();
@@ -637,9 +1082,97 @@ function submitName() {
 }
 
 document.getElementById('clear-all').addEventListener('click', () => {
-  if (!confirm('Clear all people and assignments?')) return;
-  state = { people: [], assignments: [] };
+  if (!confirm('Clear all assignments? (People will remain)')) return;
+  state.assignments = [];
   save(); renderPeople(); renderGrid();
+});
+
+// Save/Load functionality
+document.getElementById('save-btn').addEventListener('click', () => {
+  const saveData = btoa(JSON.stringify(state));
+  document.getElementById('save-data').value = saveData;
+  document.getElementById('save-modal').classList.add('show');
+});
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const textarea = document.getElementById('save-data');
+  textarea.select();
+  document.execCommand('copy');
+  alert('Copied to clipboard! Share this code to load on another device.');
+});
+
+document.getElementById('save-close').addEventListener('click', () => {
+  document.getElementById('save-modal').classList.remove('show');
+});
+
+document.getElementById('load-btn').addEventListener('click', () => {
+  const code = prompt('Paste your save code:');
+  if (!code) return;
+  try {
+    const loaded = JSON.parse(atob(code));
+    if (loaded && Array.isArray(loaded.people) && Array.isArray(loaded.assignments)) {
+      state = loaded;
+      save(); renderPeople(); renderGrid();
+      alert('Loaded successfully!');
+    } else {
+      alert('Invalid save code.');
+    }
+  } catch (e) {
+    alert('Error loading save code.');
+  }
+});
+
+// Download image functionality
+document.getElementById('download-btn').addEventListener('click', async () => {
+  const peopleDiv = document.getElementById('people');
+  const summaryDiv = document.getElementById('text-summary');
+  const legendDiv = document.getElementById('legend');
+
+  // Generate text summary
+  summaryDiv.innerHTML = '';
+  const sortedPeople = [...state.people].sort((a, b) => a.name.localeCompare(b.name));
+  for (const p of sortedPeople) {
+    const s = statsFor(p.id);
+    const item = document.createElement('div');
+    item.className = 'summary-item';
+    const breakdown = [];
+    if (s.allday > 0) breakdown.push(`${s.allday} All Day`);
+    if (s.morning > 0) breakdown.push(`${s.morning} Morning`);
+    if (s.evening > 0) breakdown.push(`${s.evening} Evening`);
+    const breakdownText = breakdown.length > 0 ? ` (${breakdown.join(', ')})` : '';
+    item.innerHTML = `<span class="summary-name">${escapeHtml(p.name)}:</span><span class="summary-stats">${s.shifts.toFixed(1)} Shifts${breakdownText} - ${s.hours} Hours</span>`;
+    summaryDiv.appendChild(item);
+  }
+
+  // Switch to text view
+  peopleDiv.style.display = 'none';
+  legendDiv.style.display = 'none';
+  summaryDiv.classList.add('show');
+
+  // Wait for render
+  await new Promise(r => setTimeout(r, 100));
+
+  // Capture screenshot
+  try {
+    const canvas = await html2canvas(document.getElementById('app'), {
+      scale: 3,
+      backgroundColor: '#0f1115',
+      logging: false
+    });
+
+    // Download
+    const link = document.createElement('a');
+    link.download = `rota-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('Error generating image. Make sure you have html2canvas loaded.');
+  }
+
+  // Restore view
+  peopleDiv.style.display = '';
+  legendDiv.style.display = '';
+  summaryDiv.classList.remove('show');
 });
 
 document.getElementById('toggle-view').addEventListener('click', () => {
@@ -652,6 +1185,11 @@ document.getElementById('toggle-view').addEventListener('click', () => {
     app.classList.add('view-only');
     btn.textContent = 'Back to Edit';
   }
+});
+
+document.getElementById('sort-select').addEventListener('change', (e) => {
+  sortMode = e.target.value;
+  renderPeople();
 });
 
 load();
