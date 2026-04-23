@@ -542,6 +542,47 @@
   #save-modal button.primary {
     background: var(--accent); border-color: var(--accent); color: white;
   }
+
+  /* Defaults modal */
+  #defaults-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1200;
+  }
+  #defaults-modal.show { display: flex; }
+  #defaults-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1em 1.1em;
+    min-width: 16em;
+    display: flex; flex-direction: column; gap: 0.6em;
+  }
+  #defaults-modal .dialog-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 1em;
+    margin-bottom: 0.3em;
+  }
+  #defaults-modal .btn-row { display: flex; gap: 0.5em; }
+  #defaults-modal button {
+    flex: 1;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.6em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+  }
+  #defaults-modal button:hover {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
+  #defaults-modal .close-btn {
+    margin-top: 0.3em;
+  }
 </style>
 </head>
 <body>
@@ -645,6 +686,17 @@
   </div>
 </div>
 
+<div id="defaults-modal">
+  <div class="dialog">
+    <div class="dialog-title" id="defaults-title">Manage Defaults</div>
+    <div class="btn-row">
+      <button id="set-defaults-btn">Set Defaults</button>
+      <button id="load-defaults-btn">Load Defaults</button>
+    </div>
+    <button class="close-btn" id="defaults-close">Close</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 (() => {
@@ -730,6 +782,8 @@ function statsFor(personId) {
 
 let sortMode = 'name';
 
+let isDragging = false;
+
 function renderPeople() {
   const el = document.getElementById('people');
   el.innerHTML = '';
@@ -758,6 +812,11 @@ function renderPeople() {
     div.querySelector('.del').addEventListener('click', (e) => {
       e.stopPropagation();
       if (confirm(`Remove ${p.name}?`)) removePerson(p.id);
+    });
+    div.addEventListener('click', (e) => {
+      if (!isDragging && !e.target.closest('.del')) {
+        openDefaultsModal(p);
+      }
     });
     attachDrag(div, p);
     el.appendChild(div);
@@ -906,7 +965,25 @@ function attachDrag(el, person) {
     if (e.target.closest('.del')) return;
     if (e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
-    startDrag(person, e.clientX, e.clientY, el, null);
+    isDragging = false;
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const checkDrag = (moveEvent) => {
+      const dx = Math.abs(moveEvent.clientX - startX);
+      const dy = Math.abs(moveEvent.clientY - startY);
+      if (dx > 5 || dy > 5) {
+        isDragging = true;
+        document.removeEventListener('pointermove', checkDrag);
+        startDrag(person, moveEvent.clientX, moveEvent.clientY, el, null);
+      }
+    };
+
+    document.addEventListener('pointermove', checkDrag);
+    document.addEventListener('pointerup', () => {
+      document.removeEventListener('pointermove', checkDrag);
+      setTimeout(() => { isDragging = false; }, 100);
+    }, { once: true });
   });
 }
 function attachMiniDrag(el, assignment, person, day, role) {
@@ -1191,6 +1268,72 @@ document.getElementById('sort-select').addEventListener('change', (e) => {
   sortMode = e.target.value;
   renderPeople();
 });
+
+// Defaults modal
+let currentDefaultsPerson = null;
+
+function openDefaultsModal(person) {
+  currentDefaultsPerson = person;
+  document.getElementById('defaults-title').textContent = `${person.name} - Defaults`;
+  document.getElementById('defaults-modal').classList.add('show');
+}
+
+function closeDefaultsModal() {
+  document.getElementById('defaults-modal').classList.remove('show');
+  currentDefaultsPerson = null;
+}
+
+document.getElementById('set-defaults-btn').addEventListener('click', () => {
+  if (!currentDefaultsPerson) return;
+  const assignments = state.assignments.filter(a => a.personId === currentDefaultsPerson.id);
+  const defaults = assignments.map(a => ({
+    day: a.day,
+    role: a.role,
+    shift: a.shift,
+    subType: a.subType,
+    position: a.position
+  }));
+  const person = state.people.find(p => p.id === currentDefaultsPerson.id);
+  if (person) {
+    person.defaults = defaults;
+    save();
+    alert(`Saved ${defaults.length} shifts as defaults for ${person.name}`);
+  }
+  closeDefaultsModal();
+});
+
+document.getElementById('load-defaults-btn').addEventListener('click', () => {
+  if (!currentDefaultsPerson) return;
+  const person = state.people.find(p => p.id === currentDefaultsPerson.id);
+  if (!person || !person.defaults || person.defaults.length === 0) {
+    alert(`No defaults saved for ${currentDefaultsPerson.name}`);
+    return;
+  }
+
+  // Remove current assignments for this person
+  state.assignments = state.assignments.filter(a => a.personId !== person.id);
+
+  // Add defaults
+  for (const def of person.defaults) {
+    state.assignments.push({
+      id: uid(),
+      personId: person.id,
+      day: def.day,
+      role: def.role,
+      shift: def.shift,
+      subType: def.subType,
+      position: def.position
+    });
+  }
+
+  save();
+  renderGrid();
+  renderPeople();
+  alert(`Loaded ${person.defaults.length} default shifts for ${person.name}`);
+  closeDefaultsModal();
+});
+
+document.getElementById('defaults-close').addEventListener('click', closeDefaultsModal);
 
 load();
 renderGrid();
