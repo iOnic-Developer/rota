@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1115">
+<title>Rota</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e8ee;
+    --muted: #8a92a3;
+    --accent: #4f8cff;
+    --morning: #f5b458;
+    --evening: #7a5bd9;
+    --allday: #3ec28f;
+    --danger: #e5484d;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 100vw; height: 100dvh;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: clamp(10px, 1.35vmin, 16px);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #app { display: flex; width: 100%; height: 100%; }
+
+  /* LEFT PANE (30%) */
+  #left {
+    flex: 0 0 30%;
+    display: flex; flex-direction: column;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+  #left header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6em 0.8em;
+    border-bottom: 1px solid var(--border);
+  }
+  #left header h1 { margin: 0; font-size: 1.2em; font-weight: 600; letter-spacing: 0.04em; }
+  .icon-btn {
+    background: var(--accent); color: white;
+    border: none; border-radius: 50%;
+    width: 2em; height: 2em;
+    font-size: 1.3em; line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { filter: brightness(1.1); }
+
+  #people {
+    flex: 1; min-height: 0;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0.5em; padding: 0.5em;
+    overflow-y: auto;
+    align-content: start;
+  }
+  .person {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 0.55em 0.6em 0.5em;
+    display: flex; flex-direction: column; gap: 0.15em;
+    cursor: grab;
+    position: relative;
+    touch-action: none;
+    min-width: 0;
+  }
+  .person:active { cursor: grabbing; }
+  .person.dragging { opacity: 0.35; }
+  .person .name {
+    font-weight: 600; font-size: 1.05em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-right: 1em;
+  }
+  .person .sep { border-top: 1px dashed var(--border); margin: 0.3em 0; }
+  .person .row { font-size: 0.88em; color: var(--muted); }
+  .person .row strong { color: var(--text); font-weight: 600; }
+  .person .shifts-total { font-size: 0.95em; }
+  .person .shifts-total strong { color: var(--accent); }
+  .person .del {
+    position: absolute; top: 0.25em; right: 0.3em;
+    background: transparent; border: none; color: var(--muted);
+    font-size: 1em; cursor: pointer; line-height: 1;
+    padding: 0.1em 0.3em;
+  }
+  .person .del:hover { color: var(--danger); }
+
+  #clear-all {
+    padding: 0.5em 0.8em;
+    border-top: 1px solid var(--border);
+    color: var(--muted); font-size: 0.82em;
+    text-align: center; cursor: pointer;
+  }
+  #clear-all:hover { color: var(--danger); }
+
+  /* RIGHT PANE (70%) */
+  #right {
+    flex: 1; min-width: 0;
+    display: grid;
+    grid-template-columns: auto repeat(7, 1fr);
+    grid-template-rows: auto repeat(5, 1fr);
+    gap: 2px;
+    background: var(--border);
+    padding: 2px;
+  }
+  .corner, .day-header, .role-label {
+    background: var(--panel);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    padding: 0.3em 0.4em;
+    font-size: 0.95em;
+  }
+  .role-label { padding: 0 0.5em; white-space: nowrap; }
+
+  .cell {
+    background: var(--panel-2);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.2em;
+    padding: 0.2em;
+    min-width: 0; min-height: 0;
+    transition: background 0.15s;
+  }
+  .cell.overflow { grid-template-rows: 1fr 1fr 1fr; }
+  .cell.drag-over { background: #2b3446; }
+  .cell.shake { animation: shake 0.3s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .slot {
+    border: 1px dashed #353b47;
+    border-radius: 0.25em;
+  }
+  .mini {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.25em;
+    padding: 0.2em 0.35em;
+    display: flex; align-items: center; justify-content: space-between;
+    overflow: hidden;
+    cursor: pointer;
+    font-size: 0.82em;
+    min-width: 0;
+  }
+  .mini .m-name {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1; min-width: 0;
+  }
+  .mini .m-badge {
+    font-size: 0.75em; font-weight: 700;
+    padding: 0 0.3em;
+    margin-left: 0.3em;
+    flex-shrink: 0;
+    opacity: 0.9;
+  }
+  .mini.morning { border-left: 3px solid var(--morning); }
+  .mini.morning .m-badge { color: var(--morning); }
+  .mini.evening { border-left: 3px solid var(--evening); }
+  .mini.evening .m-badge { color: var(--evening); }
+  .mini.allday {
+    background: var(--allday);
+    border-color: var(--allday);
+    color: #0a1410;
+  }
+  .mini.allday .m-badge { color: #0a1410; }
+
+  /* Drag ghost */
+  #drag-ghost {
+    position: fixed; pointer-events: none;
+    opacity: 0.85; z-index: 1000;
+    transform: translate(-50%, -50%);
+    background: var(--panel-2);
+    border: 1px solid var(--accent);
+    border-radius: 0.5em;
+    padding: 0.4em 0.8em;
+    font-weight: 600;
+    font-size: 1em;
+    display: none;
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  }
+
+  /* Popover */
+  #popover {
+    position: fixed; z-index: 1100;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 0.4em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    display: none;
+    gap: 0.3em;
+  }
+  #popover.show { display: flex; }
+  #popover button {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5em 0.8em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+  }
+  #popover button:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* Name modal */
+  #name-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1200;
+  }
+  #name-modal.show { display: flex; }
+  #name-modal .dialog {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 0.5em;
+    padding: 1em 1.1em;
+    min-width: 16em;
+    display: flex; flex-direction: column; gap: 0.6em;
+  }
+  #name-modal label { font-size: 0.9em; color: var(--muted); }
+  #name-modal input {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    padding: 0.5em 0.6em;
+    font-size: 1em;
+    outline: none;
+  }
+  #name-modal input:focus { border-color: var(--accent); }
+  #name-modal .btn-row { display: flex; gap: 0.5em; justify-content: flex-end; }
+  #name-modal button {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.45em 0.9em; border-radius: 0.3em;
+    cursor: pointer; font-size: 0.9em;
+  }
+  #name-modal button.primary {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="left">
+    <header>
+      <h1>Rota</h1>
+      <button class="icon-btn" id="add-btn" title="Add person" aria-label="Add person">+</button>
+    </header>
+    <div id="people"></div>
+    <div id="clear-all">Clear all</div>
+  </aside>
+  <main id="right"></main>
+</div>
+
+<div id="drag-ghost"></div>
+
+<div id="popover">
+  <button data-shift="morning">Morning</button>
+  <button data-shift="evening">Evening</button>
+  <button data-shift="allday">All day</button>
+</div>
+
+<div id="name-modal">
+  <div class="dialog">
+    <label for="name-input">Person's name</label>
+    <input id="name-input" type="text" autocomplete="off" spellcheck="false" />
+    <div class="btn-row">
+      <button id="name-cancel">Cancel</button>
+      <button id="name-ok" class="primary">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const DAYS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const ROLES = ['Fryer','Takeaway','Restaurant','Extra','Kitchen'];
+const CELL_MAX = 6;
+const STORAGE_KEY = 'rota-v1';
+
+function hoursFor(shift, dayIdx) {
+  const longDay = (dayIdx === 4 || dayIdx === 5);
+  if (shift === 'morning') return 5;
+  if (shift === 'evening') return longDay ? 5 : 4;
+  if (shift === 'allday')  return longDay ? 10 : 9;
+  return 0;
+}
+
+let state = { people: [], assignments: [] };
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (s && Array.isArray(s.people) && Array.isArray(s.assignments)) state = s;
+  } catch (e) {}
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
+function statsFor(personId) {
+  let morning = 0, evening = 0, allday = 0, hours = 0;
+  for (const a of state.assignments) {
+    if (a.personId !== personId) continue;
+    if (a.shift === 'morning') morning++;
+    else if (a.shift === 'evening') evening++;
+    else if (a.shift === 'allday')  allday++;
+    hours += hoursFor(a.shift, a.day);
+  }
+  const shifts = allday + 0.5 * (morning + evening);
+  return { morning, evening, allday, hours, shifts };
+}
+
+function renderPeople() {
+  const el = document.getElementById('people');
+  el.innerHTML = '';
+  for (const p of state.people) {
+    const s = statsFor(p.id);
+    const div = document.createElement('div');
+    div.className = 'person';
+    div.dataset.personId = p.id;
+    div.innerHTML = `
+      <button class="del" title="Remove" aria-label="Remove person">&times;</button>
+      <div class="name">${escapeHtml(p.name)}</div>
+      <div class="shifts-total"><strong>${s.shifts.toFixed(1)}</strong> Shifts</div>
+      <div class="sep"></div>
+      <div class="row"><strong>${s.allday}</strong> all day</div>
+      <div class="row"><strong>${s.morning}</strong> Morning</div>
+      <div class="row"><strong>${s.evening}</strong> Evening</div>
+      <div class="sep"></div>
+      <div class="row"><strong>${s.hours}</strong> Hours</div>
+    `;
+    div.querySelector('.del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm(`Remove ${p.name}?`)) removePerson(p.id);
+    });
+    attachDrag(div, p);
+    el.appendChild(div);
+  }
+}
+
+function renderGrid() {
+  const el = document.getElementById('right');
+  el.innerHTML = '';
+  const corner = document.createElement('div');
+  corner.className = 'corner';
+  el.appendChild(corner);
+  for (const d of DAYS) {
+    const h = document.createElement('div');
+    h.className = 'day-header';
+    h.textContent = d;
+    el.appendChild(h);
+  }
+  for (let r = 0; r < ROLES.length; r++) {
+    const rl = document.createElement('div');
+    rl.className = 'role-label';
+    rl.textContent = ROLES[r];
+    el.appendChild(rl);
+    for (let d = 0; d < DAYS.length; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.day = d;
+      cell.dataset.role = r;
+      renderCell(cell, d, r);
+      el.appendChild(cell);
+    }
+  }
+}
+
+function renderCell(cell, day, role) {
+  cell.innerHTML = '';
+  const assigns = state.assignments.filter(a => a.day === day && a.role === role);
+  const count = assigns.length;
+  const slots = count > 4 ? CELL_MAX : 4;
+  cell.classList.toggle('overflow', slots === CELL_MAX);
+  for (let i = 0; i < slots; i++) {
+    if (i < count) {
+      const a = assigns[i];
+      const person = state.people.find(p => p.id === a.personId);
+      if (!person) continue;
+      const m = document.createElement('div');
+      m.className = 'mini ' + a.shift;
+      const badge = a.shift === 'allday' ? 'AD' : (a.shift === 'morning' ? 'M' : 'E');
+      m.innerHTML = `<span class="m-name">${escapeHtml(person.name)}</span><span class="m-badge">${badge}</span>`;
+      m.title = `${person.name} — ${a.shift} (click to remove)`;
+      m.addEventListener('click', () => removeAssignment(a.id));
+      cell.appendChild(m);
+    } else {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      cell.appendChild(slot);
+    }
+  }
+}
+
+function rerenderCell(day, role) {
+  const cell = document.querySelector(`.cell[data-day="${day}"][data-role="${role}"]`);
+  if (cell) renderCell(cell, day, role);
+}
+
+function addPerson(name) {
+  const n = name.trim();
+  if (!n) return;
+  state.people.push({ id: uid(), name: n });
+  save(); renderPeople();
+}
+function removePerson(personId) {
+  state.people = state.people.filter(p => p.id !== personId);
+  state.assignments = state.assignments.filter(a => a.personId !== personId);
+  save(); renderPeople(); renderGrid();
+}
+function addAssignment(personId, day, role, shift) {
+  const count = state.assignments.filter(a => a.day === day && a.role === role).length;
+  if (count >= CELL_MAX) { shakeCell(day, role); return false; }
+  state.assignments.push({ id: uid(), personId, day, role, shift });
+  save(); rerenderCell(day, role); renderPeople();
+  return true;
+}
+function removeAssignment(aid) {
+  const a = state.assignments.find(x => x.id === aid);
+  if (!a) return;
+  state.assignments = state.assignments.filter(x => x.id !== aid);
+  save(); rerenderCell(a.day, a.role); renderPeople();
+}
+function shakeCell(day, role) {
+  const cell = document.querySelector(`.cell[data-day="${day}"][data-role="${role}"]`);
+  if (!cell) return;
+  cell.classList.remove('shake');
+  void cell.offsetWidth;
+  cell.classList.add('shake');
+}
+
+let drag = null;
+const ghost = document.getElementById('drag-ghost');
+
+function attachDrag(el, person) {
+  el.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.del')) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    startDrag(person, e.clientX, e.clientY, el);
+  });
+}
+function startDrag(person, x, y, el) {
+  drag = { person, el };
+  el.classList.add('dragging');
+  ghost.textContent = person.name;
+  ghost.style.display = 'block';
+  moveGhost(x, y);
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEnd);
+  document.addEventListener('pointercancel', onDragEnd);
+}
+function moveGhost(x, y) {
+  ghost.style.left = x + 'px';
+  ghost.style.top = y + 'px';
+}
+function onDragMove(e) {
+  if (!drag) return;
+  moveGhost(e.clientX, e.clientY);
+  document.querySelectorAll('.cell.drag-over').forEach(c => c.classList.remove('drag-over'));
+  const target = cellFromPoint(e.clientX, e.clientY);
+  if (target) target.classList.add('drag-over');
+}
+function onDragEnd(e) {
+  if (!drag) return;
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointerup', onDragEnd);
+  document.removeEventListener('pointercancel', onDragEnd);
+  ghost.style.display = 'none';
+  if (drag.el) drag.el.classList.remove('dragging');
+  document.querySelectorAll('.cell.drag-over').forEach(c => c.classList.remove('drag-over'));
+  const target = cellFromPoint(e.clientX, e.clientY);
+  const person = drag.person;
+  drag = null;
+  if (target) {
+    const day  = parseInt(target.dataset.day, 10);
+    const role = parseInt(target.dataset.role, 10);
+    openPopover(person, day, role, e.clientX, e.clientY);
+  }
+}
+function cellFromPoint(x, y) {
+  const els = document.elementsFromPoint(x, y);
+  return els.find(el => el.classList && el.classList.contains('cell'));
+}
+
+const pop = document.getElementById('popover');
+let pending = null;
+function openPopover(person, day, role, x, y) {
+  pending = { personId: person.id, day, role };
+  pop.classList.add('show');
+  pop.style.left = '0px'; pop.style.top = '0px';
+  const rect = pop.getBoundingClientRect();
+  const nx = Math.min(Math.max(4, x - rect.width / 2), window.innerWidth  - rect.width  - 4);
+  const ny = Math.min(Math.max(4, y + 10),              window.innerHeight - rect.height - 4);
+  pop.style.left = nx + 'px';
+  pop.style.top  = ny + 'px';
+}
+function closePopover() {
+  pop.classList.remove('show');
+  pending = null;
+}
+pop.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b || !pending) return;
+  addAssignment(pending.personId, pending.day, pending.role, b.dataset.shift);
+  closePopover();
+});
+document.addEventListener('pointerdown', (e) => {
+  if (pop.classList.contains('show') && !pop.contains(e.target)) closePopover();
+}, true);
+
+const modal = document.getElementById('name-modal');
+const input = document.getElementById('name-input');
+document.getElementById('add-btn').addEventListener('click', () => {
+  input.value = '';
+  modal.classList.add('show');
+  setTimeout(() => input.focus(), 30);
+});
+document.getElementById('name-cancel').addEventListener('click', () => modal.classList.remove('show'));
+document.getElementById('name-ok').addEventListener('click', submitName);
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitName();
+  else if (e.key === 'Escape') modal.classList.remove('show');
+});
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) modal.classList.remove('show');
+});
+function submitName() {
+  if (!input.value.trim()) return;
+  addPerson(input.value);
+  modal.classList.remove('show');
+}
+
+document.getElementById('clear-all').addEventListener('click', () => {
+  if (!confirm('Clear all people and assignments?')) return;
+  state = { people: [], assignments: [] };
+  save(); renderPeople(); renderGrid();
+});
+
+load();
+renderGrid();
+renderPeople();
+
+})();
+</script>
+</body>
+</html>
