@@ -33,43 +33,66 @@
   }
   #app { display: flex; width: 100%; height: 100%; }
 
-  /* LEFT PANE (30%) */
+  /* LEFT PANE (20%) */
   #left {
-    flex: 0 0 30%;
+    flex: 0 0 20%;
     display: flex; flex-direction: column;
     background: var(--panel);
     border-right: 1px solid var(--border);
     min-width: 0;
+    transition: transform 0.3s ease;
   }
+  #left.hidden { transform: translateX(-100%); position: absolute; }
+  #app.view-only #left { display: none; }
+  #app.view-only #right { border-left: none; }
   #left header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0.6em 0.8em;
+    padding: 0.5em 0.6em;
     border-bottom: 1px solid var(--border);
+    gap: 0.4em;
   }
-  #left header h1 { margin: 0; font-size: 1.2em; font-weight: 600; letter-spacing: 0.04em; }
+  #left header h1 { margin: 0; font-size: 1.1em; font-weight: 600; letter-spacing: 0.02em; }
   .icon-btn {
     background: var(--accent); color: white;
     border: none; border-radius: 50%;
-    width: 2em; height: 2em;
-    font-size: 1.3em; line-height: 1;
+    width: 1.8em; height: 1.8em;
+    font-size: 1.2em; line-height: 1;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
   .icon-btn:hover { filter: brightness(1.1); }
 
+  .toggle-view-btn {
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.4em 0.7em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 500;
+    white-space: nowrap;
+    position: absolute;
+    top: 0.5em;
+    right: 0.6em;
+    z-index: 100;
+  }
+  .toggle-view-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+  #app.view-only .toggle-view-btn { left: 0.6em; right: auto; }
+
   #people {
     flex: 1; min-height: 0;
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 0.5em; padding: 0.5em;
+    display: grid; grid-template-columns: 1fr;
+    gap: 0.4em; padding: 0.4em;
     overflow-y: auto;
     align-content: start;
   }
   .person {
     background: var(--panel-2);
     border: 1px solid var(--border);
-    border-radius: 0.5em;
-    padding: 0.55em 0.6em 0.5em;
-    display: flex; flex-direction: column; gap: 0.15em;
+    border-radius: 0.4em;
+    padding: 0.45em 0.5em 0.4em;
+    display: flex; flex-direction: column; gap: 0.1em;
     cursor: grab;
     position: relative;
     touch-action: none;
@@ -78,32 +101,54 @@
   .person:active { cursor: grabbing; }
   .person.dragging { opacity: 0.35; }
   .person .name {
-    font-weight: 600; font-size: 1.05em;
+    font-weight: 600; font-size: 0.95em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     padding-right: 1em;
   }
-  .person .sep { border-top: 1px dashed var(--border); margin: 0.3em 0; }
-  .person .row { font-size: 0.88em; color: var(--muted); }
+  .person .sep { border-top: 1px dashed var(--border); margin: 0.25em 0; }
+  .person .row { font-size: 0.8em; color: var(--muted); line-height: 1.3; }
   .person .row strong { color: var(--text); font-weight: 600; }
-  .person .shifts-total { font-size: 0.95em; }
+  .person .shifts-total { font-size: 0.88em; }
   .person .shifts-total strong { color: var(--accent); }
   .person .del {
-    position: absolute; top: 0.25em; right: 0.3em;
+    position: absolute; top: 0.2em; right: 0.25em;
     background: transparent; border: none; color: var(--muted);
-    font-size: 1em; cursor: pointer; line-height: 1;
+    font-size: 0.95em; cursor: pointer; line-height: 1;
     padding: 0.1em 0.3em;
   }
   .person .del:hover { color: var(--danger); }
 
-  #clear-all {
-    padding: 0.5em 0.8em;
+  #legend {
+    padding: 0.5em 0.6em;
     border-top: 1px solid var(--border);
-    color: var(--muted); font-size: 0.82em;
+    font-size: 0.75em;
+    color: var(--muted);
+  }
+  #legend .title { font-weight: 600; margin-bottom: 0.4em; color: var(--text); }
+  #legend .item {
+    display: flex; align-items: center; gap: 0.4em; margin-bottom: 0.25em;
+    line-height: 1.3;
+  }
+  #legend .badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.6em; height: 1.6em;
+    border-radius: 0.2em;
+    font-weight: 700; font-size: 0.9em;
+    flex-shrink: 0;
+  }
+  #legend .badge.m { background: var(--morning); color: #1a1410; }
+  #legend .badge.e { background: var(--evening); color: white; }
+  #legend .badge.ad { background: var(--allday); color: #0a1410; }
+
+  #clear-all {
+    padding: 0.4em 0.6em;
+    border-top: 1px solid var(--border);
+    color: var(--muted); font-size: 0.75em;
     text-align: center; cursor: pointer;
   }
   #clear-all:hover { color: var(--danger); }
 
-  /* RIGHT PANE (70%) */
+  /* RIGHT PANE (80%) */
   #right {
     flex: 1; min-width: 0;
     display: grid;
@@ -112,6 +157,7 @@
     gap: 2px;
     background: var(--border);
     padding: 2px;
+    position: relative;
   }
   .corner, .day-header, .role-label {
     background: var(--panel);
@@ -127,8 +173,8 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 0.2em;
-    padding: 0.2em;
+    gap: 0.25em;
+    padding: 0.3em;
     min-width: 0; min-height: 0;
     transition: background 0.15s;
   }
@@ -142,41 +188,47 @@
   }
 
   .slot {
-    border: 1px dashed #353b47;
+    border: 1px dashed #2a3038;
     border-radius: 0.25em;
   }
   .mini {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 0.25em;
-    padding: 0.2em 0.35em;
+    border-radius: 0.3em;
+    padding: 0.3em 0.4em;
     display: flex; align-items: center; justify-content: space-between;
     overflow: hidden;
-    cursor: pointer;
-    font-size: 0.82em;
+    cursor: grab;
+    font-size: 0.85em;
     min-width: 0;
+    touch-action: none;
+    transition: transform 0.1s, box-shadow 0.1s;
   }
+  .mini:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  .mini:active { cursor: grabbing; }
+  .mini.dragging { opacity: 0.35; }
   .mini .m-name {
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     flex: 1; min-width: 0;
+    font-weight: 500;
   }
   .mini .m-badge {
-    font-size: 0.75em; font-weight: 700;
-    padding: 0 0.3em;
-    margin-left: 0.3em;
+    font-size: 0.7em; font-weight: 700;
+    padding: 0.2em 0.35em;
+    margin-left: 0.35em;
     flex-shrink: 0;
-    opacity: 0.9;
+    border-radius: 0.2em;
   }
   .mini.morning { border-left: 3px solid var(--morning); }
-  .mini.morning .m-badge { color: var(--morning); }
+  .mini.morning .m-badge { background: var(--morning); color: #1a1410; }
   .mini.evening { border-left: 3px solid var(--evening); }
-  .mini.evening .m-badge { color: var(--evening); }
+  .mini.evening .m-badge { background: var(--evening); color: white; }
   .mini.allday {
     background: var(--allday);
     border-color: var(--allday);
     color: #0a1410;
   }
-  .mini.allday .m-badge { color: #0a1410; }
+  .mini.allday .m-badge { background: rgba(0,0,0,0.15); color: #0a1410; }
 
   /* Drag ghost */
   #drag-ghost {
@@ -259,12 +311,19 @@
 </head>
 <body>
 <div id="app">
+  <button class="toggle-view-btn" id="toggle-view">View Rota Only</button>
   <aside id="left">
     <header>
       <h1>Rota</h1>
       <button class="icon-btn" id="add-btn" title="Add person" aria-label="Add person">+</button>
     </header>
     <div id="people"></div>
+    <div id="legend">
+      <div class="title">Shift Times</div>
+      <div class="item"><span class="badge m">M</span> Morning (5hrs)</div>
+      <div class="item"><span class="badge e">E</span> Evening (4-5hrs)</div>
+      <div class="item"><span class="badge ad">AD</span> All Day (9-10hrs)</div>
+    </div>
     <div id="clear-all">Clear all</div>
   </aside>
   <main id="right"></main>
@@ -405,10 +464,14 @@ function renderCell(cell, day, role) {
       if (!person) continue;
       const m = document.createElement('div');
       m.className = 'mini ' + a.shift;
+      m.dataset.assignmentId = a.id;
       const badge = a.shift === 'allday' ? 'AD' : (a.shift === 'morning' ? 'M' : 'E');
       m.innerHTML = `<span class="m-name">${escapeHtml(person.name)}</span><span class="m-badge">${badge}</span>`;
-      m.title = `${person.name} — ${a.shift} (click to remove)`;
-      m.addEventListener('click', () => removeAssignment(a.id));
+      m.title = `${person.name} — ${a.shift} (drag to move, click to remove)`;
+      m.addEventListener('click', (e) => {
+        if (!drag) removeAssignment(a.id);
+      });
+      attachMiniDrag(m, a, person);
       cell.appendChild(m);
     } else {
       const slot = document.createElement('div');
@@ -463,11 +526,18 @@ function attachDrag(el, person) {
     if (e.target.closest('.del')) return;
     if (e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
-    startDrag(person, e.clientX, e.clientY, el);
+    startDrag(person, e.clientX, e.clientY, el, null);
   });
 }
-function startDrag(person, x, y, el) {
-  drag = { person, el };
+function attachMiniDrag(el, assignment, person) {
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    startDrag(person, e.clientX, e.clientY, el, assignment);
+  });
+}
+function startDrag(person, x, y, el, assignment) {
+  drag = { person, el, assignment };
   el.classList.add('dragging');
   ghost.textContent = person.name;
   ghost.style.display = 'block';
@@ -497,11 +567,20 @@ function onDragEnd(e) {
   document.querySelectorAll('.cell.drag-over').forEach(c => c.classList.remove('drag-over'));
   const target = cellFromPoint(e.clientX, e.clientY);
   const person = drag.person;
+  const assignment = drag.assignment;
   drag = null;
   if (target) {
     const day  = parseInt(target.dataset.day, 10);
     const role = parseInt(target.dataset.role, 10);
-    openPopover(person, day, role, e.clientX, e.clientY);
+    if (assignment) {
+      // Moving existing assignment
+      if (assignment.day === day && assignment.role === role) return; // Same cell
+      removeAssignment(assignment.id);
+      openPopover(person, day, role, e.clientX, e.clientY);
+    } else {
+      // New assignment from person card
+      openPopover(person, day, role, e.clientX, e.clientY);
+    }
   }
 }
 function cellFromPoint(x, y) {
@@ -561,6 +640,18 @@ document.getElementById('clear-all').addEventListener('click', () => {
   if (!confirm('Clear all people and assignments?')) return;
   state = { people: [], assignments: [] };
   save(); renderPeople(); renderGrid();
+});
+
+document.getElementById('toggle-view').addEventListener('click', () => {
+  const app = document.getElementById('app');
+  const btn = document.getElementById('toggle-view');
+  if (app.classList.contains('view-only')) {
+    app.classList.remove('view-only');
+    btn.textContent = 'View Rota Only';
+  } else {
+    app.classList.add('view-only');
+    btn.textContent = 'Back to Edit';
+  }
 });
 
 load();
